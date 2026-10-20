@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610201143"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -740,6 +740,7 @@ $("bSet").onclick = () => {
     '<div class="fld"><label>المظهر</label><div class="seg" id="sTheme">' + Object.entries(THEMES).map(([k, l]) => '<button data-k="' + k + '" class="' + (S.theme === k ? "on" : "") + '">' + l + "</button>").join("") + "</div></div>" +
     '<div class="fld"><label>أسئلتي المستوردة</label><div><button class="btn" id="sImp">إدارة أسئلتي المستوردة (' + IMP.sets.reduce((n, s) => n + s.items.length, 0) + ')</button></div></div>' +
     '<p class="note" style="margin-top:12px">يُحفظ تقدمك تلقائيًا على هذا الجهاز' + (db && uid ? "، وفي حسابك على Claude لتكمل من أي جهاز." : ".") + "</p>" +
+    (window.APP_VER ? '<p class="note">الإصدار: ' + esc(window.APP_VER.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)$/, "$1-$2-$3 $4:$5")) + " · يتحدث تلقائيًا عند فتح التطبيق وأنت متصل بالإنترنت.</p>" : "") +
     '<p class="note">اختصارات لوحة المفاتيح: الأرقام 1–5 للإجابة مباشرة، أو الأسهم ↑↓ ثم Enter، و← و→ للتنقل بين الأسئلة.</p>' +
     '<div class="fld"><label>مسح البيانات</label><div><button class="btn" id="sReset">مسح كل الإجابات والبدء من جديد</button></div><div id="sConf" hidden><p>متأكد؟ ستُمسح إجابات التدريب والمحاكاة والسجل. المفضلة تبقى.</p><button class="btn danger" id="sYes">نعم، امسح</button> <button class="btn" id="sNo">إلغاء</button></div></div>' +
     '<div class="mact"><button class="btn pri" id="sOk">حفظ</button></div>',
@@ -956,7 +957,15 @@ render();
 boot();
 </script>
 <script>
-if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+if ("serviceWorker" in navigator) {
+  const hadSW = !!navigator.serviceWorker.controller; let swReloaded = false;
+  // a newer version took over: save progress and reload once so the viewer sees it
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadSW && !swReloaded) { swReloaded = true; try { persist(false) } catch (e) {} location.reload() } });
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(reg => {
+    reg.update().catch(() => {});
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}) });
+  }).catch(() => {}));
+}
 let installEvt = null;
 addEventListener("beforeinstallprompt", e => {
   e.preventDefault(); installEvt = e;
