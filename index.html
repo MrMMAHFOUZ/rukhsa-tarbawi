@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610210936"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610211028"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -227,7 +227,7 @@ body.focus .main{max-width:820px;margin-inline:auto;width:100%}
     </div>
     <div class="modes hide-focus" role="tablist" aria-label="نوع الاختبار">
       <button id="mPrac" role="tab">وضع التدريب</button>
-      <button id="mSim" role="tab">وضع المحاكاة</button>
+      <button id="mSim" role="tab">اختبر نفسك</button>
     </div>
     <div class="timer" id="timer" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg><span id="tval">00:00</span></div>
     <button class="ib" id="bSide" title="إظهار أو إخفاء لوحة الأسئلة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg><span class="lbl">لوحة الأسئلة</span></button>
@@ -421,7 +421,7 @@ function paint() {
   const c = ctx(), n = { all: c.list.length, g: 0, r: 0, u: 0, d: 0, fl: 0, fv: 0 };
   c.list.forEach(k => { n[stateOf(c, k)]++; if (c.flag.has(k)) n.fl++; if (FAV.has(k)) n.fv++ });
   const answered = n.g + n.r + n.d;
-  $("pnTitle").textContent = c.sim ? "أسئلة المحاكاة" : "قائمة الأسئلة";
+  $("pnTitle").textContent = c.sim ? "أسئلة الاختبار" : "قائمة الأسئلة";
   $("sectRow").hidden = c.sim;
   $("lgD").hidden = !(c.sim && !c.done);
   $("stats").innerHTML = (c.sim && !c.done)
@@ -466,7 +466,7 @@ function render() {
     ((!c.sim || c.done) ? '<span class="score">الدرجة: ' + score + '</span>' : "") + "</div>";
   h += '<div class="qbox"><div class="chips"><span class="chip src">' + esc(q.n ? q.s + " – س" + q.n : q.s) + '</span><span class="chip">' + esc(q.d) + '</span>' + (flagged ? '<span class="chip flag">⚑ للمراجعة لاحقًا</span>' : "") + (FAV.has(k) ? '<span class="chip">★ مفضلة</span>' : "") + "</div>";
   h += '<div class="qt">' + esc(q.q) + "</div></div>";
-  h += '<div class="hint">' + (showTruth ? "" : c.sim ? "اختر إجابة ثم اضغط «تثبيت الإجابة» أو Enter:" : "اختر الإجابة الصحيحة، وستظهر النتيجة فورًا:") + "</div>";
+  h += '<div class="hint">' + (showTruth ? "" : c.sim ? "اختر إجابتك، وتُحفظ تلقائيًا. تظهر النتيجة بعد تسليم الاختبار:" : "اختر الإجابة الصحيحة، وستظهر النتيجة فورًا:") + "</div>";
   h += '<div class="opts" role="radiogroup">';
   const chosen = sel !== null ? sel : (c.sim && !c.done ? a : null);
   q.o.forEach((o, i) => {
@@ -485,11 +485,10 @@ function render() {
     h += '<div class="fb ' + kind + '"><h4>' + title + "</h4><p><b>الإجابة الصحيحة: " + L[q.a] + ") " + esc(q.o[q.a]) + "</b></p><p>" + esc(q.f) + "</p>" +
       '<div class="more" id="more">' + (aiOK ? '<button class="link" id="aiBtn">لماذا البدائل الأخرى خاطئة؟ اطلب شرحًا مفصلًا من Claude</button><div class="ai" id="aiOut"></div>' : '<span class="note">الشرح أعلاه من بنك الأسئلة.</span>') + "</div></div>";
   }
-  if (c.sim && !c.done && a !== null && a !== undefined && sel === null) h += '<p class="note" style="margin:10px 0 0">✓ تم تثبيت إجابتك (' + L[a] + '). يمكنك تغييرها قبل تسليم الاختبار.</p>';
+  if (c.sim && !c.done && a !== null && a !== undefined && sel === null) h += '<p class="note" style="margin:10px 0 0">✓ تم حفظ إجابتك (' + L[a] + '). يمكنك تغييرها قبل تسليم الاختبار.</p>';
   // action bar
   h += '<div class="act">' +
     '<button class="btn" id="bPrev"' + (pos <= 0 ? " disabled" : "") + '>› السابق</button>' +
-    (c.sim ? '<button class="btn pri" id="bConf"' + (showTruth ? " disabled" : "") + '>تثبيت الإجابة</button>' : "") +
     '<button class="btn" id="bNext">' + (pos >= c.list.length - 1 ? (c.sim && !c.done ? "تسليم الاختبار" : "إنهاء") : "التالي ‹") + "</button>" +
     '<span class="sp"></span>' +
     '<button class="btn' + (flagged ? " on" : "") + '" id="bFlag" aria-pressed="' + flagged + '">⚑ ' + (flagged ? "معلّم للمراجعة" : "مراجعة لاحقًا") + "</button>" +
@@ -499,7 +498,7 @@ function render() {
     (!c.sim ? (practiceLocked ? '<button class="link" id="bRetry">↺ إعادة المحاولة</button>' : '<button class="link" id="bExplain">👁 شرح الإجابة</button>') : "") +
     '<button class="link" id="bReport">⚐ الإبلاغ عن سؤال</button>' +
     '<button class="link" id="bSave">💾 حفظ واستكمال لاحقًا</button>' +
-    (c.sim && !c.done ? '<button class="link" id="bSubmit">تسليم الاختبار الآن</button>' : '<button class="link" id="bEnd">' + (c.sim ? "عرض نتيجة المحاكاة" : "إنهاء الاختبار وعرض النتيجة") + "</button>") +
+    (c.sim && !c.done ? '<button class="link" id="bSubmit">تسليم الاختبار الآن</button>' : '<button class="link" id="bEnd">' + (c.sim ? "عرض نتيجة الاختبار" : "إنهاء الاختبار وعرض النتيجة") + "</button>") +
     "</div>";
   $("mn").innerHTML = h;
 
@@ -523,6 +522,7 @@ function choose(i) {
   const c = ctx(), k = c.cur;
   if (!c.sim && (c.A[k] !== null || R.has(k))) return;
   if (c.sim && c.done) return;
+  if (c.sim) { S.sim.A[k] = i; sel = null; persist(true); render(); const b = $("mn").querySelector('.op[data-i="' + i + '"]'); b && b.focus(); return }   // test: the tap is the answer
   sel = i;
   if (!c.sim) return confirmAnswer();   // practice: show right/wrong immediately
   render();
@@ -551,19 +551,19 @@ function finishAsk() {
 }
 
 /* ---------- simulation ---------- */
-$("mPrac").onclick = () => { if (S.mode === "prac") return; S.mode = "prac"; sel = null; view = "q"; persist(false); render(); if (S.sim && !S.sim.done) toast("تم إيقاف المحاكاة مؤقتًا. يمكنك استكمالها من «وضع المحاكاة».") };
+$("mPrac").onclick = () => { if (S.mode === "prac") return; S.mode = "prac"; sel = null; view = "q"; persist(false); render(); if (S.sim && !S.sim.done) toast("تم إيقاف الاختبار مؤقتًا. يمكنك استكماله من «اختبر نفسك».") };
 $("mSim").onclick = () => {
-  if (S.sim && !S.sim.done) { S.mode = "sim"; sel = null; view = "q"; persist(false); render(); toast("استكمال المحاكاة. المؤقت يعمل الآن."); return }
+  if (S.sim && !S.sim.done) { S.mode = "sim"; sel = null; view = "q"; persist(false); render(); toast("استكمال الاختبار. المؤقت يعمل الآن."); return }
   simSetup();
 };
 function simSetup() {
   const opts = '<option value="all">كل الأقسام (' + N + ")</option>" + SECTS.map(s => '<option value="' + esc(s) + '">' + esc(s) + " (" + Q.filter(q => q.s === s).length + ")</option>").join("");
-  modal('<h3>اختبار محاكاة جديد</h3><p class="note">يحاكي الاختبار الفعلي: تُختار الأسئلة عشوائيًا، وتُخفى الإجابات الصحيحة حتى التسليم، ثم يظهر تقرير بالنتيجة.</p>' +
+  modal('<h3>اختبر نفسك – اختبار جديد</h3><p class="note">يحاكي الاختبار الفعلي: تُختار الأسئلة عشوائيًا، وتُخفى الإجابات الصحيحة حتى التسليم، ثم يظهر تقرير بالنتيجة.</p>' +
     '<div class="fld"><label for="sSect">الأسئلة من</label><select id="sSect">' + opts + "</select></div>" +
     '<div class="fld"><label for="sCount">عدد الأسئلة</label><input id="sCount" type="number" min="5" max="' + N + '" value="60" inputmode="numeric"></div>' +
     '<div class="fld"><label for="sMin">مدة الاختبار بالدقائق (0 = بدون مؤقت)</label><input id="sMin" type="number" min="0" max="600" value="75" inputmode="numeric"></div>' +
     '<p class="note">المؤقت يعمل فقط والصفحة مفتوحة، ويتوقف إذا أغلقتها أو انتقلت إلى وضع التدريب، ثم يُستأنف عند عودتك. عند انتهاء الوقت يُسلَّم الاختبار تلقائيًا.</p>' +
-    (S.sim && S.sim.done ? '<p class="note">سيحل هذا الاختبار محل نتيجة المحاكاة السابقة (تبقى محفوظة في سجل المحاولات).</p>' : "") +
+    (S.sim && S.sim.done ? '<p class="note">سيحل هذا الاختبار محل نتيجة الاختبار السابق (تبقى محفوظة في سجل المحاولات).</p>' : "") +
     '<div class="mact"><button class="btn pri" id="sGo">ابدأ الاختبار</button><button class="btn" id="sX">إلغاء</button></div>',
     b => {
       b.querySelector("#sX").onclick = closeModal;
@@ -595,7 +595,7 @@ function renderResult() {
   s.qs.forEach(k => { const d = Q[k].d; dom[d] = dom[d] || [0, 0]; dom[d][1]++; if (s.A[k] === null) un.push(k); else if (s.A[k] === Q[k].a) { ok++; dom[d][0]++ } else wr.push(k) });
   const p = pct(ok, s.qs.length);
   const verdict = p >= 80 ? "ممتاز، مستواك قريب من الجاهزية" : p >= 60 ? "جيد، راجع أخطاءك لرفع الدرجة" : "تحتاج مزيدًا من المراجعة";
-  $("mn").innerHTML = '<div class="vh"><h2>نتيجة اختبار المحاكاة</h2><button class="btn" id="rNew">اختبار محاكاة جديد</button></div>' +
+  $("mn").innerHTML = '<div class="vh"><h2>نتيجة «اختبر نفسك»</h2><button class="btn" id="rNew">اختبار جديد</button></div>' +
     '<div style="text-align:center;padding:8px 0 14px"><div class="big">' + ok + " / " + s.qs.length + '</div><div>' + p + "٪ · " + verdict + "</div></div>" +
     '<div class="kpis">' + kpi("إجابات صحيحة", ok) + kpi("إجابات خاطئة", wr.length) + kpi("دون إجابة", un.length) + kpi("الوقت المستغرق", fmt(s.el)) + "</div>" +
     '<div class="sec-t">الأداء حسب المجال</div>' + bars(dom) + '<p class="note">تصنيف المجالات تقريبي ومبني على كلمات السؤال.</p>' +
@@ -661,14 +661,14 @@ function renderStats() {
   strong.forEach(([d, [c, n]]) => { if (pct(c, n) >= 80) tips.push("أداؤك قوي في «" + d + "» (" + pct(c, n) + "٪)، فخصص له وقتًا أقل.") });
   const hist = S.hist.map(h => "<tr><td>" + new Date(h.at).toLocaleDateString("ar-SA-u-nu-latn", { day: "numeric", month: "short" }) + "</td><td>" + esc(h.sect === "all" ? "كل الأقسام" : h.sect) + "</td><td>" + h.c + " / " + h.n + "</td><td>" + pct(h.c, h.n) + "٪</td><td>" + fmt(h.el) + "</td></tr>").join("");
   $("mn").innerHTML = '<div class="vh"><h2>تحليل أدائي</h2><button class="btn" id="sBack">العودة للأسئلة</button></div>' +
-    '<p class="note">يعتمد على إجاباتك في وضع التدريب، وسجل محاولات المحاكاة في الأسفل.</p>' +
+    '<p class="note">يعتمد على إجاباتك في وضع التدريب، وسجل محاولات «اختبر نفسك» في الأسفل.</p>' +
     '<div class="kpis">' + kpi("نسبة الصحيحة", pct(ok, ans) + "٪") + kpi("تمت الإجابة", ans + " / " + N) + kpi("صحيحة / خاطئة", ok + " / " + wr) + kpi("وقت المذاكرة", fmt(t)) + kpi("متوسط وقت السؤال", tn ? fmt(t / tn) : "—") + "</div>" +
     '<div class="sec-t">الأداء حسب المجال التربوي</div>' + bars(dom) + '<p class="note">تصنيف المجالات تقريبي ومبني على كلمات السؤال.</p>' +
     '<div class="sec-t">الأداء حسب مصدر الأسئلة</div>' + bars(src) +
     (topWrong.length ? '<div class="sec-t">أكثر المجالات التي تتكرر فيها أخطاؤك</div><ul class="tips">' + topWrong.map(([d, n]) => "<li>" + esc(d) + ": " + n + " " + (n === 1 ? "خطأ" : "أخطاء") + "</li>").join("") + "</ul>" : "") +
     '<div class="sec-t">خطة مراجعة مقترحة</div><ul class="tips">' + tips.map(t => "<li>" + esc(t) + "</li>").join("") + "</ul>" +
-    '<div class="act"><button class="btn pri" id="sWrong"' + (wr ? "" : " disabled") + '>راجع أخطائي (' + wr + ')</button><button class="btn" id="sFlag"' + (FLAG.size ? "" : " disabled") + '>الأسئلة المعلّمة ⚑</button><button class="btn" id="sSim">اختبار محاكاة</button></div>' +
-    '<div class="sec-t">سجل محاولات المحاكاة</div>' + (hist ? '<div class="scroll"><table class="tbl"><thead><tr><th>التاريخ</th><th>الأسئلة من</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr></thead><tbody>' + hist + "</tbody></table></div>" : '<p class="note">لا توجد محاولات محاكاة بعد. جرّب «وضع المحاكاة» لتظهر هنا.</p>');
+    '<div class="act"><button class="btn pri" id="sWrong"' + (wr ? "" : " disabled") + '>راجع أخطائي (' + wr + ')</button><button class="btn" id="sFlag"' + (FLAG.size ? "" : " disabled") + '>الأسئلة المعلّمة ⚑</button><button class="btn" id="sSim">اختبر نفسك</button></div>' +
+    '<div class="sec-t">سجل محاولات «اختبر نفسك»</div>' + (hist ? '<div class="scroll"><table class="tbl"><thead><tr><th>التاريخ</th><th>الأسئلة من</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr></thead><tbody>' + hist + "</tbody></table></div>" : '<p class="note">لا توجد محاولات بعد. جرّب «اختبر نفسك» لتظهر هنا.</p>');
   $("sBack").onclick = () => { view = "q"; render() };
   $("sWrong").onclick = () => { const start = () => { S.mode = "prac"; S.p.sect = "all"; $("sect").value = "all"; filt = "r"; const k = S.p.A.findIndex((a, k) => a !== null && a !== Q[k].a); go(k); if (narrow()) { drawer = true; applySide() } toast("القائمة تعرض أخطاءك فقط. اضغط «إعادة المحاولة» لحل السؤال من جديد.") }; start() };
   $("sFlag").onclick = () => { S.mode = "prac"; S.p.sect = "all"; $("sect").value = "all"; filt = "fl"; go([...FLAG][0]) };
@@ -742,7 +742,7 @@ $("bSet").onclick = () => {
     '<p class="note" style="margin-top:12px">يُحفظ تقدمك تلقائيًا على هذا الجهاز' + (db && uid ? "، وفي حسابك على Claude لتكمل من أي جهاز." : ".") + "</p>" +
     (window.APP_VER ? '<p class="note">الإصدار: ' + esc(window.APP_VER.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)$/, "$1-$2-$3 $4:$5")) + " · يتحدث تلقائيًا عند فتح التطبيق وأنت متصل بالإنترنت.</p>" : "") +
     '<p class="note">اختصارات لوحة المفاتيح: الأرقام 1–5 للإجابة مباشرة، أو الأسهم ↑↓ ثم Enter، و← و→ للتنقل بين الأسئلة.</p>' +
-    '<div class="fld"><label>مسح البيانات</label><div><button class="btn" id="sReset">مسح كل الإجابات والبدء من جديد</button></div><div id="sConf" hidden><p>متأكد؟ ستُمسح إجابات التدريب والمحاكاة والسجل. المفضلة تبقى.</p><button class="btn danger" id="sYes">نعم، امسح</button> <button class="btn" id="sNo">إلغاء</button></div></div>' +
+    '<div class="fld"><label>مسح البيانات</label><div><button class="btn" id="sReset">مسح كل الإجابات والبدء من جديد</button></div><div id="sConf" hidden><p>متأكد؟ ستُمسح إجابات التدريب و«اختبر نفسك» والسجل. المفضلة تبقى.</p><button class="btn danger" id="sYes">نعم، امسح</button> <button class="btn" id="sNo">إلغاء</button></div></div>' +
     '<div class="mact"><button class="btn pri" id="sOk">حفظ</button></div>',
     b => {
       b.querySelectorAll("#sTheme button").forEach(x => x.onclick = () => { S.theme = x.dataset.k; applyTheme(); b.querySelectorAll("#sTheme button").forEach(y => y.classList.toggle("on", y === x)) });
@@ -889,7 +889,7 @@ document.addEventListener("keydown", e => {
   const open = c.sim ? !c.done : (c.A[k] === null && !R.has(k));
   const n = parseInt(e.key, 10);
   if (open && n >= 1 && n <= q.o.length) { e.preventDefault(); choose(n - 1) }
-  else if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const cur = sel !== null ? sel : (c.sim && c.A[k] !== null ? c.A[k] : -1); sel = e.key === "ArrowDown" ? Math.min(q.o.length - 1, cur + 1) : Math.max(0, cur - 1); render(); const b = $("mn").querySelector('.op[data-i="' + sel + '"]'); b && b.focus() }
+  else if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const cur = sel !== null ? sel : (c.sim && c.A[k] !== null ? c.A[k] : -1); const nx = e.key === "ArrowDown" ? Math.min(q.o.length - 1, cur + 1) : Math.max(0, cur - 1); if (c.sim) { choose(nx); return } sel = nx; render(); const b = $("mn").querySelector('.op[data-i="' + sel + '"]'); b && b.focus() }
   else if (e.key === "Enter" && open && sel !== null) { e.preventDefault(); confirmAnswer() }
   else if (e.key === "ArrowLeft") { const p = c.list.indexOf(k); if (p < c.list.length - 1) go(c.list[p + 1]) }
   else if (e.key === "ArrowRight") { const p = c.list.indexOf(k); if (p > 0) go(c.list[p - 1]) }
