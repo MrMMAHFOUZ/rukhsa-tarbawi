@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280804"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280805"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -762,8 +762,10 @@ const toLatin = s => s.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d
 function parseQuestions(text) {
   text = text.replace(/^﻿/, "");
   let raw = [];
-  if (/^\s*[\[{]/.test(text)) {
-    let data; try { data = JSON.parse(text) } catch (e) { return { items: [], skipped: [{ n: "—", why: "ملف JSON غير صالح" }] } }
+  // JSON only if it really parses: a text file can also start with "[" (e.g. "[سؤال 1] …")
+  let data = null;
+  if (/^\s*[\[{]/.test(text)) { try { data = JSON.parse(text) } catch (e) { data = null } }
+  if (data !== null) {
     if (!Array.isArray(data)) data = data.questions || [];
     raw = data.map((r, k) => ({ n: r.n || k + 1, q: r.q || r.question, o: r.o || r.options, a: typeof r.a === "number" ? r.a : letterIdx(r.a != null ? r.a : r.answer), f: r.f || r.explanation || "" }));
   } else {
