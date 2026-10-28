@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610281109"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610281127"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -902,11 +902,11 @@ async function explainAI(k, full) {
   }
   if (aiCtl) aiCtl.abort();
   aiCtl = new AbortController(); const ctl = aiCtl;
-  btn.disabled = true; out.textContent = "جارٍ التفكير… قد يستغرق ذلك عدة ثوانٍ.";
+  btn.disabled = true; aiWait("Claude");
   act.innerHTML = '<button class="btn" id="aiStop">إيقاف</button>';
   $("aiStop").onclick = () => ctl.abort();
   try {
-    await sample(prompt, { signal: ctl.signal, cache: { gcTime: 86400000 }, onText: ({ text }) => { if ($("aiOut")) $("aiOut").textContent = text.replace(/\*\*/g, "") } });
+    await sample(prompt, { modelTier: aiFast() ? "quick" : "default", signal: ctl.signal, cache: { gcTime: 86400000 }, onText: ({ text }) => { aiStopWait(); if ($("aiOut")) $("aiOut").textContent = text.replace(/\*\*/g, "") } });
     if ($("aiAct")) $("aiAct").innerHTML = "";
   } catch (e) {
     const o = $("aiOut"); if (!o) return;
@@ -914,8 +914,20 @@ async function explainAI(k, full) {
     if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(e.code)) { aiOK = false; o.textContent = "الشرح بالذكاء الاصطناعي غير متاح هنا. اضغط الزر مرة أخرى لفتحه في Claude." }
     else if (e.code === "cancelled") { o.textContent = (e.text || "") + (e.text ? "\n\n(أوقفت الشرح)" : "تم الإيقاف.") }
     else o.textContent = e.text || (e.code === "rate_limited" ? "تم الوصول إلى حد الاستخدام. حاول لاحقًا." : "تعذّر الحصول على الشرح. حاول مرة أخرى.");
-  } finally { if ($("bAI")) $("bAI").disabled = false }
+  } finally { aiStopWait(); if ($("bAI")) $("bAI").disabled = false }
 }
+
+/* fast (default) answers in a few seconds; accurate thinks longer */
+const SKEY = "rm_ai_speed";
+const aiFast = () => { try { return localStorage.getItem(SKEY) !== "accurate" } catch (e) { return true } };
+// live "thinking… (Ns)" counter until the first words arrive
+let aiTick = null;
+function aiWait(label) {
+  const t0 = Date.now(); clearInterval(aiTick);
+  const upd = () => { const o = $("aiOut"); if (!o) return aiStopWait(); o.textContent = "جارٍ التفكير… " + label + (aiFast() ? " – سريع" : " – دقيق") + " (" + Math.round((Date.now() - t0) / 1000) + " ث)" };
+  upd(); aiTick = setInterval(upd, 1000);
+}
+function aiStopWait() { clearInterval(aiTick); aiTick = null }
 
 /* ---------- explanation with the viewer's own Claude API key (stays in this browser only) ---------- */
 const AIKEY = "rm_ai_key";
@@ -930,16 +942,16 @@ async function explainWithGemini(prompt) {
   if (aiCtl) aiCtl.abort();
   aiCtl = new AbortController(); const ctl = aiCtl;
   if ($("bAI")) $("bAI").disabled = true;
-  out.textContent = "جارٍ التفكير… قد يستغرق ذلك عدة ثوانٍ.";
+  aiWait("Gemini");
   act.innerHTML = '<button class="btn" id="aiStop">إيقاف</button>';
   $("aiStop").onclick = () => ctl.abort();
   let text = "";
-  const show = () => { if ($("aiOut")) $("aiOut").textContent = text.replace(/\*\*|^#+\s*/gm, "") };
+  const show = () => { aiStopWait(); if ($("aiOut")) $("aiOut").textContent = text.replace(/\*\*|^#+\s*/gm, "") };
   try {
     const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions?alt=sse", {
       method: "POST", signal: ctl.signal,
       headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey() },
-      body: JSON.stringify({ model: "gemini-3.8-flash", input: prompt, stream: true }),
+      body: JSON.stringify({ model: aiFast() ? "gemini-3.5-flash-lite" : "gemini-3.8-flash", input: prompt, stream: true }),
     });
     if (!res.ok) {
       let msg = ""; try { const j = await res.json(); msg = (j.error && j.error.message) || "" } catch (e) {}
@@ -967,7 +979,7 @@ async function explainWithGemini(prompt) {
     else if (e.status === 429) o.textContent = "تجاوزت الحد المجاني المسموح به الآن. انتظر قليلًا ثم حاول مرة أخرى.";
     else if (e.status) o.textContent = "تعذّر الحصول على الشرح من Gemini (" + e.status + "). حاول مرة أخرى.";
     else o.textContent = "تعذّر الاتصال بـ Gemini. تأكد من اتصالك بالإنترنت.";
-  } finally { if ($("bAI")) $("bAI").disabled = false }
+  } finally { aiStopWait(); if ($("bAI")) $("bAI").disabled = false }
 }
 let anthropicMod = null;
 async function explainWithKey(prompt) {
@@ -975,7 +987,7 @@ async function explainWithKey(prompt) {
   if (aiCtl) aiCtl.abort();
   aiCtl = new AbortController(); const ctl = aiCtl;
   if ($("bAI")) $("bAI").disabled = true;
-  out.textContent = "جارٍ التفكير… قد يستغرق ذلك عدة ثوانٍ.";
+  aiWait("Claude");
   act.innerHTML = '<button class="btn" id="aiStop">إيقاف</button>';
   $("aiStop").onclick = () => ctl.abort();
   let text = "";
@@ -983,15 +995,13 @@ async function explainWithKey(prompt) {
     if (!anthropicMod) anthropicMod = await import("https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.133.0/+esm");
     const Anthropic = anthropicMod.default;
     const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true });
-    const stream = client.beta.messages.stream({
-      model: "claude-opus-5-5",
-      max_tokens: 8000,
-      output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      messages: [{ role: "user", content: prompt }],
-    }, { signal: ctl.signal });
-    stream.on("text", (delta, snapshot) => { text = snapshot; if ($("aiOut")) $("aiOut").textContent = snapshot.replace(/\*\*|^#+\s*/gm, "") });
+    const messages = [{ role: "user", content: prompt }];
+    const stream = aiFast()
+      // fast: Claude Haiku 5.5 without thinking starts writing almost at once
+      ? client.messages.stream({ model: "claude-haiku-5-5", max_tokens: 8000, thinking: { type: "disabled" }, output_config: { effort: "low" }, messages }, { signal: ctl.signal })
+      // accurate: Claude Opus 5.5 (always thinks first), with fallback if it declines
+      : client.beta.messages.stream({ model: "claude-opus-5-5", max_tokens: 8000, output_config: { effort: "low" }, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", messages }, { signal: ctl.signal });
+    stream.on("text", (delta, snapshot) => { aiStopWait(); text = snapshot; if ($("aiOut")) $("aiOut").textContent = snapshot.replace(/\*\*|^#+\s*/gm, "") });
     const msg = await stream.finalMessage();
     if (msg.stop_reason === "refusal" && $("aiOut")) $("aiOut").textContent = "لم يتمكن Claude من شرح هذا السؤال. جرّب سؤالًا آخر.";
     if ($("aiAct")) $("aiAct").innerHTML = "";
@@ -1006,7 +1016,7 @@ async function explainWithKey(prompt) {
     else if (A && e instanceof A.APIConnectionError) o.textContent = "تعذّر الاتصال. تأكد من اتصالك بالإنترنت.";
     else if (A && e instanceof A.APIError) o.textContent = "تعذّر الحصول على الشرح (" + (e.status || "") + "). حاول مرة أخرى.";
     else o.textContent = "تعذّر تحميل أداة الشرح. تأكد من اتصالك بالإنترنت.";
-  } finally { if ($("bAI")) $("bAI").disabled = false }
+  } finally { aiStopWait(); if ($("bAI")) $("bAI").disabled = false }
 }
 
 /* ---------- settings ---------- */
@@ -1019,6 +1029,7 @@ $("bSet").onclick = () => {
       '<div id="pvClaude"' + (aiProvider() === "claude" ? "" : " hidden") + '><input id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Claude API ويبدأ بـ sk-ant-" value="' + esc(aiKey()) + '"><span class="note">احصل عليه من console.anthropic.com ← API Keys. مدفوع: كل شرح بضعة سنتات تقريبًا من رصيد حسابك.</span></div>' +
       '<div id="pvGemini"' + (aiProvider() === "gemini" ? "" : " hidden") + '><input id="sGKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Gemini API" value="' + esc(geminiKey()) + '"><span class="note">احصل عليه من aistudio.google.com ← Get API key. يوجد مستوى مجاني بحد يومي من الطلبات، وقد تستخدم Google طلبات المستوى المجاني لتحسين منتجاتها.</span></div>' +
       '<span class="note">المفتاح يُحفظ على هذا الجهاز فقط ولا يُرسل إلا إلى الشركة صاحبة النموذج. اتركه فارغًا لفتح الشرح في موقع Claude بدلًا من ذلك.</span></div>') +
+    '<div class="fld"><label>سرعة الشرح بالذكاء الاصطناعي</label><div class="seg" id="sSpeed"><button data-s="fast" class="' + (aiFast() ? "on" : "") + '">سريع (ثوانٍ قليلة)</button><button data-s="accurate" class="' + (aiFast() ? "" : "on") + '">دقيق (أبطأ وأعمق)</button></div></div>' +
     '<div class="fld"><label>أسئلتي المستوردة</label><div><button class="btn" id="sImp">إدارة أسئلتي المستوردة (' + IMP.sets.reduce((n, s) => n + s.items.length, 0) + ')</button></div></div>' +
     '<p class="note" style="margin-top:12px">يُحفظ تقدمك تلقائيًا على هذا الجهاز' + (db && uid ? "، وفي حسابك على Claude لتكمل من أي جهاز." : ".") + "</p>" +
     (window.APP_VER ? '<p class="note">الإصدار: ' + esc(window.APP_VER.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)$/, "$1-$2-$3 $4:$5")) + " · يتحدث تلقائيًا عند فتح التطبيق وأنت متصل بالإنترنت.</p>" : "") +
@@ -1028,6 +1039,7 @@ $("bSet").onclick = () => {
     b => {
       b.querySelectorAll("#sTheme button").forEach(x => x.onclick = () => { S.theme = x.dataset.k; applyTheme(); b.querySelectorAll("#sTheme button").forEach(y => y.classList.toggle("on", y === x)) });
       b.querySelector("#sImp").onclick = importsModal;
+      b.querySelectorAll("#sSpeed button").forEach(x => x.onclick = () => { try { localStorage.setItem(SKEY, x.dataset.s) } catch (e) {} b.querySelectorAll("#sSpeed button").forEach(y => y.classList.toggle("on", y === x)) });
       b.querySelectorAll("#sProv button").forEach(x => x.onclick = () => {
         b.querySelectorAll("#sProv button").forEach(y => y.classList.toggle("on", y === x));
         b.querySelector("#pvClaude").hidden = x.dataset.p !== "claude"; b.querySelector("#pvGemini").hidden = x.dataset.p !== "gemini";
