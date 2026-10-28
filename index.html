@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280820"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280834"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -736,7 +736,8 @@ async function explainAI(k, full) {
   const q = Q[k], box = $("aiBox"), out = $("aiOut"), act = $("aiAct"), btn = $("bAI");
   const prompt = aiPrompt(q, full);
   box.hidden = false; box.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  if (!aiOK && aiKey()) return explainWithKey(prompt);
+  if (!aiOK && aiProvider() === "gemini" && geminiKey()) return explainWithGemini(prompt);
+  if (!aiOK && aiProvider() === "claude" && aiKey()) return explainWithKey(prompt);
   if (!aiOK) {
     // no built-in Claude here and no personal key: open Claude in a new tab with the question ready
     const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
@@ -768,6 +769,55 @@ async function explainAI(k, full) {
 /* ---------- explanation with the viewer's own Claude API key (stays in this browser only) ---------- */
 const AIKEY = "rm_ai_key";
 const aiKey = () => { try { return localStorage.getItem(AIKEY) || "" } catch (e) { return "" } };
+const GKEY = "rm_ai_key_gemini", PKEY = "rm_ai_provider";
+const geminiKey = () => { try { return localStorage.getItem(GKEY) || "" } catch (e) { return "" } };
+const aiProvider = () => { try { return localStorage.getItem(PKEY) || (geminiKey() && !aiKey() ? "gemini" : "claude") } catch (e) { return "claude" } };
+
+/* Gemini (Interactions API, streamed as server-sent events) */
+async function explainWithGemini(prompt) {
+  const out = $("aiOut"), act = $("aiAct");
+  if (aiCtl) aiCtl.abort();
+  aiCtl = new AbortController(); const ctl = aiCtl;
+  if ($("bAI")) $("bAI").disabled = true;
+  out.textContent = "جارٍ التفكير… قد يستغرق ذلك عدة ثوانٍ.";
+  act.innerHTML = '<button class="btn" id="aiStop">إيقاف</button>';
+  $("aiStop").onclick = () => ctl.abort();
+  let text = "";
+  const show = () => { if ($("aiOut")) $("aiOut").textContent = text.replace(/\*\*|^#+\s*/gm, "") };
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions?alt=sse", {
+      method: "POST", signal: ctl.signal,
+      headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey() },
+      body: JSON.stringify({ model: "gemini-3.8-flash", input: prompt, stream: true }),
+    });
+    if (!res.ok) {
+      let msg = ""; try { const j = await res.json(); msg = (j.error && j.error.message) || "" } catch (e) {}
+      const err = new Error(msg); err.status = res.status; throw err;
+    }
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim(); if (!data || data === "[DONE]") continue;
+        try { const ev = JSON.parse(data); if (ev.event_type === "step.delta" && ev.delta && ev.delta.type === "text") { text += ev.delta.text || ""; show() } } catch (e) {}
+      }
+    }
+    if (!text && $("aiOut")) $("aiOut").textContent = "لم يصل رد من Gemini. حاول مرة أخرى.";
+    if ($("aiAct")) $("aiAct").innerHTML = "";
+  } catch (e) {
+    const o = $("aiOut"); if (!o) return;
+    if ($("aiAct")) $("aiAct").innerHTML = "";
+    if (ctl.signal.aborted) o.textContent = text ? text + "\n\n(أوقفت الشرح)" : "تم الإيقاف.";
+    else if (e.status === 400 && /api key/i.test(e.message) || e.status === 401 || e.status === 403) o.textContent = "مفتاح Gemini غير صحيح أو لا يملك صلاحية. تحقق منه في ⚙ الإعدادات.";
+    else if (e.status === 429) o.textContent = "تجاوزت الحد المجاني المسموح به الآن. انتظر قليلًا ثم حاول مرة أخرى.";
+    else if (e.status) o.textContent = "تعذّر الحصول على الشرح من Gemini (" + e.status + "). حاول مرة أخرى.";
+    else o.textContent = "تعذّر الاتصال بـ Gemini. تأكد من اتصالك بالإنترنت.";
+  } finally { if ($("bAI")) $("bAI").disabled = false }
+}
 let anthropicMod = null;
 async function explainWithKey(prompt) {
   const out = $("aiOut"), act = $("aiAct");
@@ -813,7 +863,11 @@ $("bSet").onclick = () => {
   modal('<h3>الإعدادات</h3>' +
     '<div class="fld"><label for="sName">اسمك في المنصة</label><input id="sName" maxlength="40" value="' + esc(S.name || uname || "") + '" placeholder="اكتب اسمك"></div>' +
     '<div class="fld"><label>المظهر</label><div class="seg" id="sTheme">' + Object.entries(THEMES).map(([k, l]) => '<button data-k="' + k + '" class="' + (S.theme === k ? "on" : "") + '">' + l + "</button>").join("") + "</div></div>" +
-    (aiOK ? "" : '<div class="fld"><label for="sKey">الشرح بالذكاء الاصطناعي داخل التطبيق (اختياري)</label><input id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Claude API ويبدأ بـ sk-ant-" value="' + esc(aiKey()) + '"><span class="note">احصل عليه من console.anthropic.com ← API Keys. يُحفظ على هذا الجهاز فقط ولا يُرسل إلا إلى Anthropic، وكل شرح يُحسب على رصيد حسابك (بضعة سنتات تقريبًا). اتركه فارغًا لفتح الشرح في موقع Claude بدلًا من ذلك.</span></div>') +
+    (aiOK ? "" : '<div class="fld"><label>الشرح بالذكاء الاصطناعي داخل التطبيق (اختياري)</label>' +
+      '<div class="seg" id="sProv"><button data-p="claude" class="' + (aiProvider() === "claude" ? "on" : "") + '">Claude</button><button data-p="gemini" class="' + (aiProvider() === "gemini" ? "on" : "") + '">Gemini</button></div>' +
+      '<div id="pvClaude"' + (aiProvider() === "claude" ? "" : " hidden") + '><input id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Claude API ويبدأ بـ sk-ant-" value="' + esc(aiKey()) + '"><span class="note">احصل عليه من console.anthropic.com ← API Keys. مدفوع: كل شرح بضعة سنتات تقريبًا من رصيد حسابك.</span></div>' +
+      '<div id="pvGemini"' + (aiProvider() === "gemini" ? "" : " hidden") + '><input id="sGKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Gemini API" value="' + esc(geminiKey()) + '"><span class="note">احصل عليه من aistudio.google.com ← Get API key. يوجد مستوى مجاني بحد يومي من الطلبات، وقد تستخدم Google طلبات المستوى المجاني لتحسين منتجاتها.</span></div>' +
+      '<span class="note">المفتاح يُحفظ على هذا الجهاز فقط ولا يُرسل إلا إلى الشركة صاحبة النموذج. اتركه فارغًا لفتح الشرح في موقع Claude بدلًا من ذلك.</span></div>') +
     '<div class="fld"><label>أسئلتي المستوردة</label><div><button class="btn" id="sImp">إدارة أسئلتي المستوردة (' + IMP.sets.reduce((n, s) => n + s.items.length, 0) + ')</button></div></div>' +
     '<p class="note" style="margin-top:12px">يُحفظ تقدمك تلقائيًا على هذا الجهاز' + (db && uid ? "، وفي حسابك على Claude لتكمل من أي جهاز." : ".") + "</p>" +
     (window.APP_VER ? '<p class="note">الإصدار: ' + esc(window.APP_VER.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)$/, "$1-$2-$3 $4:$5")) + " · يتحدث تلقائيًا عند فتح التطبيق وأنت متصل بالإنترنت.</p>" : "") +
@@ -823,11 +877,18 @@ $("bSet").onclick = () => {
     b => {
       b.querySelectorAll("#sTheme button").forEach(x => x.onclick = () => { S.theme = x.dataset.k; applyTheme(); b.querySelectorAll("#sTheme button").forEach(y => y.classList.toggle("on", y === x)) });
       b.querySelector("#sImp").onclick = importsModal;
+      b.querySelectorAll("#sProv button").forEach(x => x.onclick = () => {
+        b.querySelectorAll("#sProv button").forEach(y => y.classList.toggle("on", y === x));
+        b.querySelector("#pvClaude").hidden = x.dataset.p !== "claude"; b.querySelector("#pvGemini").hidden = x.dataset.p !== "gemini";
+      });
       b.querySelector("#sReset").onclick = () => b.querySelector("#sConf").hidden = false;
       b.querySelector("#sNo").onclick = () => b.querySelector("#sConf").hidden = true;
       b.querySelector("#sYes").onclick = () => { S.p.A = new Array(N).fill(null); S.p.t = {}; S.sim = null; S.mode = "prac"; S.hist = []; FLAG.clear(); R.clear(); sel = null; view = "q"; persist(true); closeModal(); render(); toast("تم مسح الإجابات") };
       b.querySelector("#sOk").onclick = () => { S.name = b.querySelector("#sName").value.trim(); persist(true);
-        const kf = b.querySelector("#sKey"); if (kf) { const kv = kf.value.trim(); try { kv ? localStorage.setItem(AIKEY, kv) : localStorage.removeItem(AIKEY) } catch (e) {} } userUI(); closeModal(); render(); toast("تم حفظ الإعدادات") };
+        const keep = (id, key) => { const f = b.querySelector(id); if (f) { const v = f.value.trim(); try { v ? localStorage.setItem(key, v) : localStorage.removeItem(key) } catch (e) {} } };
+        keep("#sKey", AIKEY); keep("#sGKey", GKEY);
+        const pv = b.querySelector("#sProv .on"); if (pv) { try { localStorage.setItem(PKEY, pv.dataset.p) } catch (e) {} }
+        userUI(); closeModal(); render(); toast("تم حفظ الإعدادات") };
     });
 };
 
