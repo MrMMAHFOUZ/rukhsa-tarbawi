@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280813"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610280820"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -736,14 +736,16 @@ async function explainAI(k, full) {
   const q = Q[k], box = $("aiBox"), out = $("aiOut"), act = $("aiAct"), btn = $("bAI");
   const prompt = aiPrompt(q, full);
   box.hidden = false; box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (!aiOK && aiKey()) return explainWithKey(prompt);
   if (!aiOK) {
-    // no built-in Claude here (the public site, the desktop app): open Claude in a new tab with the question ready
+    // no built-in Claude here and no personal key: open Claude in a new tab with the question ready
     const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
     try { navigator.clipboard.writeText(prompt).catch(() => {}) } catch (e) {}
     const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove();
-    out.textContent = "فتحتُ Claude في نافذة جديدة والسؤال مكتوب فيه، فاضغط إرسال. إن لم تُفتح النافذة فاستخدم الزر أدناه. نسخت السؤال أيضًا، فيمكنك لصقه (Ctrl+V) في أي مساعد ذكاء اصطناعي.";
-    act.innerHTML = '<a class="btn" href="' + esc(url) + '" target="_blank" rel="noopener">فتح Claude</a> <button class="btn" id="aiCopy">نسخ السؤال</button>';
+    out.textContent = "فتحتُ Claude في نافذة جديدة والسؤال مكتوب فيه، فاضغط إرسال. إن لم تُفتح النافذة فاستخدم الزر أدناه. نسخت السؤال أيضًا، فيمكنك لصقه (Ctrl+V) في أي مساعد ذكاء اصطناعي.\n\nليظهر الشرح هنا داخل التطبيق: أضف مفتاح Claude API الخاص بك من ⚙ الإعدادات.";
+    act.innerHTML = '<a class="btn" href="' + esc(url) + '" target="_blank" rel="noopener">فتح Claude</a> <button class="btn" id="aiCopy">نسخ السؤال</button> <button class="btn" id="aiSet">إضافة مفتاح API</button>';
     $("aiCopy").onclick = () => navigator.clipboard.writeText(prompt).then(() => toast("تم نسخ السؤال"), () => toast("تعذّر النسخ"));
+    $("aiSet").onclick = () => $("bSet").onclick();
     return;
   }
   if (aiCtl) aiCtl.abort();
@@ -763,11 +765,55 @@ async function explainAI(k, full) {
   } finally { if ($("bAI")) $("bAI").disabled = false }
 }
 
+/* ---------- explanation with the viewer's own Claude API key (stays in this browser only) ---------- */
+const AIKEY = "rm_ai_key";
+const aiKey = () => { try { return localStorage.getItem(AIKEY) || "" } catch (e) { return "" } };
+let anthropicMod = null;
+async function explainWithKey(prompt) {
+  const out = $("aiOut"), act = $("aiAct");
+  if (aiCtl) aiCtl.abort();
+  aiCtl = new AbortController(); const ctl = aiCtl;
+  if ($("bAI")) $("bAI").disabled = true;
+  out.textContent = "جارٍ التفكير… قد يستغرق ذلك عدة ثوانٍ.";
+  act.innerHTML = '<button class="btn" id="aiStop">إيقاف</button>';
+  $("aiStop").onclick = () => ctl.abort();
+  let text = "";
+  try {
+    if (!anthropicMod) anthropicMod = await import("https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.133.0/+esm");
+    const Anthropic = anthropicMod.default;
+    const client = new Anthropic({ apiKey: aiKey(), dangerouslyAllowBrowser: true });
+    const stream = client.beta.messages.stream({
+      model: "claude-opus-5-5",
+      max_tokens: 8000,
+      output_config: { effort: "low" },
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      messages: [{ role: "user", content: prompt }],
+    }, { signal: ctl.signal });
+    stream.on("text", (delta, snapshot) => { text = snapshot; if ($("aiOut")) $("aiOut").textContent = snapshot.replace(/\*\*|^#+\s*/gm, "") });
+    const msg = await stream.finalMessage();
+    if (msg.stop_reason === "refusal" && $("aiOut")) $("aiOut").textContent = "لم يتمكن Claude من شرح هذا السؤال. جرّب سؤالًا آخر.";
+    if ($("aiAct")) $("aiAct").innerHTML = "";
+  } catch (e) {
+    const o = $("aiOut"); if (!o) return;
+    if ($("aiAct")) $("aiAct").innerHTML = "";
+    const A = anthropicMod && anthropicMod.default;
+    if (ctl.signal.aborted || (A && e instanceof A.APIUserAbortError)) o.textContent = text ? text + "\n\n(أوقفت الشرح)" : "تم الإيقاف.";
+    else if (A && e instanceof A.AuthenticationError) o.textContent = "مفتاح API غير صحيح. تحقق منه في ⚙ الإعدادات.";
+    else if (A && e instanceof A.PermissionDeniedError) o.textContent = "المفتاح لا يملك صلاحية استخدام هذا النموذج.";
+    else if (A && e instanceof A.RateLimitError) o.textContent = "تم الوصول إلى حد الاستخدام أو نفد رصيد الحساب. حاول لاحقًا أو اشحن رصيد حسابك في console.anthropic.com.";
+    else if (A && e instanceof A.APIConnectionError) o.textContent = "تعذّر الاتصال. تأكد من اتصالك بالإنترنت.";
+    else if (A && e instanceof A.APIError) o.textContent = "تعذّر الحصول على الشرح (" + (e.status || "") + "). حاول مرة أخرى.";
+    else o.textContent = "تعذّر تحميل أداة الشرح. تأكد من اتصالك بالإنترنت.";
+  } finally { if ($("bAI")) $("bAI").disabled = false }
+}
+
 /* ---------- settings ---------- */
 $("bSet").onclick = () => {
   modal('<h3>الإعدادات</h3>' +
     '<div class="fld"><label for="sName">اسمك في المنصة</label><input id="sName" maxlength="40" value="' + esc(S.name || uname || "") + '" placeholder="اكتب اسمك"></div>' +
     '<div class="fld"><label>المظهر</label><div class="seg" id="sTheme">' + Object.entries(THEMES).map(([k, l]) => '<button data-k="' + k + '" class="' + (S.theme === k ? "on" : "") + '">' + l + "</button>").join("") + "</div></div>" +
+    (aiOK ? "" : '<div class="fld"><label for="sKey">الشرح بالذكاء الاصطناعي داخل التطبيق (اختياري)</label><input id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Claude API ويبدأ بـ sk-ant-" value="' + esc(aiKey()) + '"><span class="note">احصل عليه من console.anthropic.com ← API Keys. يُحفظ على هذا الجهاز فقط ولا يُرسل إلا إلى Anthropic، وكل شرح يُحسب على رصيد حسابك (بضعة سنتات تقريبًا). اتركه فارغًا لفتح الشرح في موقع Claude بدلًا من ذلك.</span></div>') +
     '<div class="fld"><label>أسئلتي المستوردة</label><div><button class="btn" id="sImp">إدارة أسئلتي المستوردة (' + IMP.sets.reduce((n, s) => n + s.items.length, 0) + ')</button></div></div>' +
     '<p class="note" style="margin-top:12px">يُحفظ تقدمك تلقائيًا على هذا الجهاز' + (db && uid ? "، وفي حسابك على Claude لتكمل من أي جهاز." : ".") + "</p>" +
     (window.APP_VER ? '<p class="note">الإصدار: ' + esc(window.APP_VER.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)$/, "$1-$2-$3 $4:$5")) + " · يتحدث تلقائيًا عند فتح التطبيق وأنت متصل بالإنترنت.</p>" : "") +
@@ -780,7 +826,8 @@ $("bSet").onclick = () => {
       b.querySelector("#sReset").onclick = () => b.querySelector("#sConf").hidden = false;
       b.querySelector("#sNo").onclick = () => b.querySelector("#sConf").hidden = true;
       b.querySelector("#sYes").onclick = () => { S.p.A = new Array(N).fill(null); S.p.t = {}; S.sim = null; S.mode = "prac"; S.hist = []; FLAG.clear(); R.clear(); sel = null; view = "q"; persist(true); closeModal(); render(); toast("تم مسح الإجابات") };
-      b.querySelector("#sOk").onclick = () => { S.name = b.querySelector("#sName").value.trim(); persist(true); userUI(); closeModal(); render(); toast("تم حفظ الإعدادات") };
+      b.querySelector("#sOk").onclick = () => { S.name = b.querySelector("#sName").value.trim(); persist(true);
+        const kf = b.querySelector("#sKey"); if (kf) { const kv = kf.value.trim(); try { kv ? localStorage.setItem(AIKEY, kv) : localStorage.removeItem(AIKEY) } catch (e) {} } userUI(); closeModal(); render(); toast("تم حفظ الإعدادات") };
     });
 };
 
