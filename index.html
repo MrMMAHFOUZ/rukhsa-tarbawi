@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202610312358"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611010001"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -285,6 +285,40 @@ body.vw-m .tb .user{display:none}
 body.vw-m .act{gap:6px;padding:8px}
 body.vw-m .act .btn{flex:1 1 auto;padding:8px 10px;font-size:.8rem}
 /* "mobile" view chosen on a wide screen: same layout a phone gets */
+/* phones: the fixed header stays slim (one row of icons; the two small lines hide once you scroll) */
+@media (max-width:720px){
+  .tb-in{padding-block:8px;gap:6px}
+  .brand{gap:8px}
+  .brand svg{width:34px;height:34px}
+  .brand h1{font-size:1.05rem}
+  .brand p{font-size:.66rem;line-height:1.35}
+  .tnav{flex-wrap:nowrap;overflow-x:auto;gap:2px;scrollbar-width:none}
+  .tnav::-webkit-scrollbar{display:none}
+  .tb .ib{padding:6px;flex:none}
+  .tb .ib svg{width:20px;height:20px}
+  .tb .modes{flex:none}
+  .tb .modes button{padding:4px 8px;font-size:.74rem}
+  .zoom{flex:none}
+  .zoom button{min-width:24px;height:26px}
+  .zoom #zVal{min-width:40px;font-size:.7rem}
+  body.scrolled .brand p{display:none}
+}
+body.vw-m .tb-in{padding-block:8px;gap:6px}
+body.vw-m .brand{gap:8px}
+body.vw-m .brand svg{width:34px;height:34px}
+body.vw-m .brand h1{font-size:1.05rem}
+body.vw-m .brand p{font-size:.66rem;line-height:1.35}
+body.vw-m .tnav{flex-wrap:nowrap;overflow-x:auto;gap:2px;scrollbar-width:none}
+body.vw-m .tnav::-webkit-scrollbar{display:none}
+body.vw-m .tb .ib{padding:6px;flex:none}
+body.vw-m .tb .ib svg{width:20px;height:20px}
+body.vw-m .tb .modes{flex:none}
+body.vw-m .tb .modes button{padding:4px 8px;font-size:.74rem}
+body.vw-m .zoom{flex:none}
+body.vw-m .zoom button{min-width:24px;height:26px}
+body.vw-m .zoom #zVal{min-width:40px;font-size:.7rem}
+body.vw-m.scrolled .brand p{display:none}
+
 body.vw-m .wrap,body.vw-m .tb-in{max-width:480px;margin-inline:auto}
 body.vw-m .tb,body.vw-m .pn,body.vw-m .feat{zoom:1}
 body.vw-m .cols{grid-template-columns:minmax(0,1fr)}
@@ -1373,6 +1407,7 @@ function fillSects() {
 }
 /* keep the header height in a CSS variable so scrolling to a question part never hides it under the fixed header */
 (function () { const tb = document.querySelector(".tb"); const set = () => document.documentElement.style.setProperty("--hdr", tb.getBoundingClientRect().height + "px"); set(); if (window.ResizeObserver) new ResizeObserver(set).observe(tb); window.addEventListener("resize", set) })();
+window.addEventListener("scroll", () => document.body.classList.toggle("scrolled", window.scrollY > 30), { passive: true });
 fillSects(); applyTheme(); applyView(); userUI();
 if (S.sim && S.sim.done && S.mode === "sim") view = "result";
 render();
