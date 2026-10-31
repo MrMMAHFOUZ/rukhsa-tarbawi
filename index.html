@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611010001"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611010015"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -390,7 +390,16 @@ body.vw-m .act .sp{display:none}
 .qbox{background:linear-gradient(135deg,var(--q-bg) 0%,var(--card) 100%);border:1px solid var(--q-bd);border-inline-start:0;border-radius:18px;padding:18px 20px 20px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
 .chip{border-radius:999px;padding:3px 12px}
 .chip.src{background:var(--card);border:1px solid var(--q-bd)}
-.qt{font-family:var(--f-display);font-size:1.35rem;font-weight:800}
+.qt{font-family:var(--f-q,var(--f-display));font-size:1.35rem;font-weight:800}
+/* answers, feedback and table use the same (selectable) reading font as the question */
+.op .tx{font-family:var(--f-q,var(--f-display));font-size:1.12rem;font-weight:700;line-height:1.8}
+.fb,.ai,.qtab{font-family:var(--f-q,var(--f-display))}
+.fb p{font-size:1rem}
+.fonts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.fonts button{border:1.5px solid var(--bd);background:var(--card);border-radius:12px;padding:8px 10px;text-align:right;line-height:1.5}
+.fonts button b{display:block;font-size:1.05rem}
+.fonts button small{color:var(--mut);font-family:var(--f-body);font-size:.72rem}
+.fonts button.on{border-color:var(--blue);background:var(--blue-soft);box-shadow:0 0 0 3px rgba(36,99,235,.12)}
 .op{border-radius:16px;padding:16px 18px;gap:14px;box-shadow:0 1px 0 rgba(16,47,93,.04)}
 .op .ck{width:34px;height:34px;border:0;background:var(--blue-soft);color:var(--blue-ink);font-size:.92rem}
 .op .key{display:none}
@@ -1161,6 +1170,7 @@ $("bSet").onclick = () => {
       '<div id="pvClaude"' + (aiProvider() === "claude" ? "" : " hidden") + '><input id="sKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Claude API ويبدأ بـ sk-ant-" value="' + esc(aiKey()) + '"><span class="note">احصل عليه من console.anthropic.com ← API Keys. مدفوع: كل شرح بضعة سنتات تقريبًا من رصيد حسابك.</span></div>' +
       '<div id="pvGemini"' + (aiProvider() === "gemini" ? "" : " hidden") + '><input id="sGKey" type="password" autocomplete="off" spellcheck="false" placeholder="مفتاح Gemini API" value="' + esc(geminiKey()) + '"><span class="note">احصل عليه من aistudio.google.com ← Get API key. يوجد مستوى مجاني بحد يومي من الطلبات، وقد تستخدم Google طلبات المستوى المجاني لتحسين منتجاتها.</span></div>' +
       '<span class="note">المفتاح يُحفظ على هذا الجهاز فقط ولا يُرسل إلا إلى الشركة صاحبة النموذج. اتركه فارغًا لفتح الشرح في موقع Claude بدلًا من ذلك.</span></div>') +
+    '<div class="fld"><label>خط الأسئلة والإجابات</label><div class="fonts" id="sFont">' + FONTS.map(x => '<button data-f="' + x.id + '" class="' + (fontId === x.id ? "on" : "") + '" style="font-family:\'' + x.css + '\',sans-serif"><b>' + x.sample + '</b><small>' + x.name + '</small></button>').join("") + '</div></div>' +
     '<div class="fld"><label>طريقة العرض</label><div class="seg" id="sView">' + Object.entries(VIEWS).map(([k, l]) => '<button data-v="' + k + '" class="' + (viewMode === k ? "on" : "") + '">' + l + '</button>').join("") + '</div><span class="note">«تلقائي» يختار حسب حجم الشاشة.</span></div>' +
     '<div class="fld"><label>سرعة الشرح بالذكاء الاصطناعي</label><div class="seg" id="sSpeed"><button data-s="fast" class="' + (aiFast() ? "on" : "") + '">سريع (ثوانٍ قليلة)</button><button data-s="accurate" class="' + (aiFast() ? "" : "on") + '">دقيق (أبطأ وأعمق)</button></div></div>' +
     '<div class="fld"><label>أسئلتي المستوردة</label><div><button class="btn" id="sImp">إدارة أسئلتي المستوردة (' + IMP.sets.reduce((n, s) => n + s.items.length, 0) + ')</button></div></div>' +
@@ -1172,6 +1182,8 @@ $("bSet").onclick = () => {
     b => {
       b.querySelectorAll("#sTheme button").forEach(x => x.onclick = () => { S.theme = x.dataset.k; applyTheme(); b.querySelectorAll("#sTheme button").forEach(y => y.classList.toggle("on", y === x)) });
       b.querySelector("#sImp").onclick = importsModal;
+      loadFont(FONTS.map(x => x.id));   // previews
+      b.querySelectorAll("#sFont button").forEach(x => x.onclick = () => { b.querySelectorAll("#sFont button").forEach(y => y.classList.toggle("on", y === x)); setFont(x.dataset.f) });
       b.querySelectorAll("#sView button").forEach(x => x.onclick = () => { b.querySelectorAll("#sView button").forEach(y => y.classList.toggle("on", y === x)); setView(x.dataset.v) });
       b.querySelectorAll("#sSpeed button").forEach(x => x.onclick = () => { try { localStorage.setItem(SKEY, x.dataset.s) } catch (e) {} b.querySelectorAll("#sSpeed button").forEach(y => y.classList.toggle("on", y === x)) });
       b.querySelectorAll("#sProv button").forEach(x => x.onclick = () => {
@@ -1408,6 +1420,28 @@ function fillSects() {
 /* keep the header height in a CSS variable so scrolling to a question part never hides it under the fixed header */
 (function () { const tb = document.querySelector(".tb"); const set = () => document.documentElement.style.setProperty("--hdr", tb.getBoundingClientRect().height + "px"); set(); if (window.ResizeObserver) new ResizeObserver(set).observe(tb); window.addEventListener("resize", set) })();
 window.addEventListener("scroll", () => document.body.classList.toggle("scrolled", window.scrollY > 30), { passive: true });
+/* ---------- reading font for questions and answers (Google Fonts, loaded on demand) ---------- */
+const FONTS = [
+  { id: "tajawal", css: "Tajawal", g: "Tajawal:wght@500;700;800", name: "تجوال (الافتراضي)", sample: "خط واضح وعصري" },
+  { id: "cairo", css: "Cairo", g: "Cairo:wght@500;600;700;800", name: "القاهرة", sample: "خط واضح وعصري" },
+  { id: "almarai", css: "Almarai", g: "Almarai:wght@400;700;800", name: "المراعي", sample: "خط واضح وعصري" },
+  { id: "plex", css: "IBM Plex Sans Arabic", g: "IBM+Plex+Sans+Arabic:wght@500;600;700", name: "آي بي إم بلكس", sample: "خط واضح وعصري" },
+  { id: "kufi", css: "Noto Kufi Arabic", g: "Noto+Kufi+Arabic:wght@500;600;700", name: "نوتو كوفي", sample: "خط واضح وعصري" },
+  { id: "naskh", css: "Noto Naskh Arabic", g: "Noto+Naskh+Arabic:wght@500;600;700", name: "نوتو نسخ (تقليدي)", sample: "خط واضح وعصري" },
+  { id: "amiri", css: "Amiri", g: "Amiri:wght@400;700", name: "أميري (كلاسيكي)", sample: "خط واضح وعصري" }
+];
+const FKEY = "rm_font"; let fontId = "tajawal"; try { fontId = localStorage.getItem(FKEY) || "tajawal" } catch (e) {}
+const loadedFonts = new Set(["tajawal", "plex"]);
+function loadFont(ids) {
+  const need = ids.filter(id => !loadedFonts.has(id)); if (!need.length) return;
+  need.forEach(id => loadedFonts.add(id));
+  const l = document.createElement("link"); l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?" + need.map(id => "family=" + FONTS.find(x => x.id === id).g.replace(/ /g, "+")).join("&") + "&display=swap";
+  document.head.appendChild(l);
+}
+function applyFont() { const ft = FONTS.find(x => x.id === fontId) || FONTS[0]; loadFont([ft.id]); document.documentElement.style.setProperty("--f-q", "\"" + ft.css + "\",\"IBM Plex Sans Arabic\",\"Segoe UI\",Tahoma,sans-serif") }
+function setFont(id) { fontId = id; try { localStorage.setItem(FKEY, id) } catch (e) {} applyFont(); toast("الخط: " + (FONTS.find(x => x.id === id) || FONTS[0]).name) }
+applyFont();
 fillSects(); applyTheme(); applyView(); userUI();
 if (S.sim && S.sim.done && S.mode === "sim") view = "result";
 render();
