@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611011123"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611011351"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -371,6 +371,9 @@ body.vw-m .act .sp{display:none}
 .row select option{background:#ffffff;color:#14233f;font-weight:500}
 .row select option:checked{background:#dbe7ff;color:#0B2A5B;font-weight:700}
 .row select optgroup{background:#eef3fb;color:#0E9F9A;font-weight:800;font-style:normal}
+.sreset{display:block;width:100%;margin-top:6px;padding:6px 10px;border:1px dashed var(--pn-bd);border-radius:10px;background:transparent;color:var(--pn-mut);font-size:.78rem;font-weight:600;cursor:pointer}
+.sreset:hover{color:#fff;border-color:var(--no);background:rgba(220,60,60,.18)}
+.sreset[hidden]{display:none}
 .filt{gap:6px;margin-top:12px}
 .filt button{border-radius:12px;padding:5px 12px;font-size:.78rem;background:rgba(255,255,255,.06)}
 .filt button.on{background:linear-gradient(160deg,#3B82F6,#1D4ED8);border-color:#7fa6ff}
@@ -514,6 +517,7 @@ body.vw-m .act .sp{display:none}
       <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="ابحث في نص الأسئلة أو اكتب رقمًا" autocomplete="off"></div>
       <div class="lbl2" id="sectLbl">اختر تصنيف الأسئلة</div>
       <div class="row" id="sectRow"><select id="sect" aria-label="القسم"></select></div>
+      <button class="sreset" id="sectReset" hidden>↺ مسح إجابات هذا القسم فقط</button>
       <div class="filt" id="filt"></div>
       <div class="quick"><button id="qUn">أول سؤال غير محلول</button><button id="qFl">التالي للمراجعة ⚑</button><button id="qImp" class="imp">＋ استيراد أسئلتي</button></div>
       <div class="gridh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>لوحة الأسئلة</div>
@@ -684,7 +688,27 @@ let savedT;
 function showSaved() { /* quiet indicator in settings + toast on explicit save */ savedT = Date.now() }
 
 /* ---------- side panel ---------- */
-$("sect").onchange = e => { S.p.sect = e.target.value; sel = null; persist(false); view = "q"; render() };
+$("sect").onchange = e => { S.p.sect = e.target.value; sel = null; persist(false); view = "q"; syncSectReset(); render() };
+// clear the practice answers (and a «اختبر نفسك» test taken from this section) of the selected section only
+function syncSectReset() { $("sectReset").hidden = S.p.sect === "all" }
+$("sectReset").onclick = () => {
+  const sect = S.p.sect; if (sect === "all") return;
+  const ks = []; for (let k = 0; k < N; k++) if (Q[k].s === sect) ks.push(k);
+  const answered = ks.filter(k => S.p.A[k] !== null).length;
+  const simHere = S.sim && S.sim.sect === sect;
+  if (!answered && !simHere) { toast("لا توجد إجابات محفوظة في هذا القسم"); return }
+  modal('<h3>مسح إجابات القسم</h3><p>سيتم مسح إجاباتك في قسم <b>«' + esc(sect) + '»</b> فقط (' + answered + ' من ' + ks.length + ' سؤالًا مُجابًا)' +
+    (simHere ? '، ومعها اختبار «اختبر نفسك» الذي بدأته من هذا القسم' : '') + '.</p><p class="note">باقي الأقسام والمفضلة وأسئلة المراجعة لا تتأثر.</p>' +
+    '<div class="mact"><button class="btn danger" id="srYes">نعم، امسح هذا القسم</button><button class="btn" id="srNo">إلغاء</button></div>', b => {
+    b.querySelector("#srNo").onclick = closeModal;
+    b.querySelector("#srYes").onclick = () => {
+      ks.forEach(k => { S.p.A[k] = null; delete S.p.t[k]; R.delete(k) });
+      if (simHere) { S.sim = null; S.mode = "prac" }
+      S.p.i = ks[0]; sel = null; view = "q"; persist(true); closeModal(); render();
+      toast("تم مسح إجابات القسم «" + sect + "»");
+    };
+  });
+};
 $("q").oninput = e => { query = e.target.value.trim(); paint() };
 $("q").onkeydown = e => {
   if (e.key !== "Enter") return;
@@ -741,6 +765,7 @@ $("qFl").onclick = () => { const c = ctx(); const p = c.list.indexOf(c.cur); con
 /* ---------- question view ---------- */
 function go(k) { const c = ctx(); setCur(c, k); view = "q"; render(); if (narrow()) window.scrollTo(0, 0) }
 function render() {
+  syncSectReset();
   $("mPrac").classList.toggle("on", S.mode === "prac");
   $("mSim").classList.toggle("on", S.mode === "sim");
   timerUI();
@@ -1430,6 +1455,7 @@ function fillSects() {
     groups.map(G => '<optgroup label="' + esc(G.g) + '">' + G.items.map(s => '<option value="' + esc(s) + '">' + esc(s) + " (" + count(s) + ")</option>").join("") + "</optgroup>").join("");
   if (S.p.sect !== "all" && !SECTS.includes(S.p.sect)) S.p.sect = "all";
   $("sect").value = S.p.sect;
+  syncSectReset();
 }
 /* keep the header height in a CSS variable so scrolling to a question part never hides it under the fixed header */
 (function () { const tb = document.querySelector(".tb"); const set = () => document.documentElement.style.setProperty("--hdr", tb.getBoundingClientRect().height + "px"); set(); if (window.ResizeObserver) new ResizeObserver(set).observe(tb); window.addEventListener("resize", set) })();
