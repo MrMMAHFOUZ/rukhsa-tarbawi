@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611011351"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611032039"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -371,9 +371,44 @@ body.vw-m .act .sp{display:none}
 .row select option{background:#ffffff;color:#14233f;font-weight:500}
 .row select option:checked{background:#dbe7ff;color:#0B2A5B;font-weight:700}
 .row select optgroup{background:#eef3fb;color:#0E9F9A;font-weight:800;font-style:normal}
-.sreset{display:block;width:100%;margin-top:6px;padding:6px 10px;border:1px dashed var(--pn-bd);border-radius:10px;background:transparent;color:var(--pn-mut);font-size:.78rem;font-weight:600;cursor:pointer}
-.sreset:hover{color:#fff;border-color:var(--no);background:rgba(220,60,60,.18)}
-.sreset[hidden]{display:none}
+.stools{display:grid;gap:6px;margin-top:6px}
+.stools[hidden]{display:none}
+.sreset{display:block;width:100%;padding:6px 10px;border:1px dashed var(--pn-bd);border-radius:10px;background:transparent;color:var(--pn-mut);font-size:.78rem;font-weight:600;cursor:pointer;text-align:center}
+.sreset:hover{color:#fff;border-color:var(--teal);background:rgba(20,184,166,.16)}
+.sreset.del:hover{border-color:var(--no);background:rgba(220,60,60,.18)}
+/* whole section, solved (review page) and its printable copy */
+.rv-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.rv-h h2{margin:0;flex:1;font-size:1.15rem}
+.rv{border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px;background:var(--card)}
+.rv .rv-n{font-size:.78rem;color:var(--mut);margin-bottom:4px}
+.rv .rv-q{font-family:var(--f-q,var(--f-display));font-weight:700;font-size:1.05rem;line-height:1.9}
+.rv ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.rv li{border:1px solid var(--bd);border-radius:10px;padding:7px 10px;font-family:var(--f-q,var(--f-display));line-height:1.7}
+.rv li.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok-ink);font-weight:700}
+.rv .rv-f{margin-top:8px;font-size:.9rem;line-height:1.9;background:var(--blue-soft);border-radius:10px;padding:8px 10px}
+.rv details{margin-top:8px}
+.rv summary{cursor:pointer;font-weight:700;color:var(--blue-ink);font-size:.9rem}
+.rv details .stx{white-space:pre-wrap;font-family:var(--f-q,var(--f-display));line-height:2;margin-top:6px}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body.printing>*:not(#printArea){display:none!important}
+  body.printing{background:#fff!important;zoom:1!important}
+  body.printing #printArea{display:block;color:#000;font-family:var(--f-q,var(--f-display))}
+  #printArea .ph{text-align:center;border-bottom:2px solid #0B2A5B;padding-bottom:8px;margin-bottom:12px}
+  #printArea .ph h1{margin:0;font-size:18pt;color:#0B2A5B}
+  #printArea .ph p{margin:2px 0;font-size:10pt;color:#444}
+  #printArea .pq{break-inside:avoid;border:1px solid #bbb;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11pt;line-height:1.7}
+  #printArea .pq b.pn{color:#0B2A5B}
+  #printArea .pq ol{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+  #printArea .pq li.ok{font-weight:800;text-decoration:underline}
+  #printArea .pq .pf{margin-top:4px;font-size:9.5pt;color:#333;border-top:1px dashed #bbb;padding-top:4px;white-space:pre-wrap}
+  #printArea .qtab table{border-collapse:collapse;font-size:9pt}
+  #printArea .qtab th,#printArea .qtab td{border:1px solid #999;padding:3px 5px}
+  #printArea .pkey{break-before:page}
+  #printArea .pkey table{border-collapse:collapse;width:100%;font-size:10pt}
+  #printArea .pkey td{border:1px solid #999;padding:3px 6px;text-align:center}
+}
 .filt{gap:6px;margin-top:12px}
 .filt button{border-radius:12px;padding:5px 12px;font-size:.78rem;background:rgba(255,255,255,.06)}
 .filt button.on{background:linear-gradient(160deg,#3B82F6,#1D4ED8);border-color:#7fa6ff}
@@ -517,7 +552,11 @@ body.vw-m .act .sp{display:none}
       <div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="ابحث في نص الأسئلة أو اكتب رقمًا" autocomplete="off"></div>
       <div class="lbl2" id="sectLbl">اختر تصنيف الأسئلة</div>
       <div class="row" id="sectRow"><select id="sect" aria-label="القسم"></select></div>
-      <button class="sreset" id="sectReset" hidden>↺ مسح إجابات هذا القسم فقط</button>
+      <div class="stools" id="sectTools" hidden>
+        <button class="sreset" id="sectSolve">📖 عرض القسم كاملًا محلولًا</button>
+        <button class="sreset" id="sectPdf">⬇ تحميل أسئلة القسم PDF</button>
+        <button class="sreset del" id="sectReset">↺ مسح إجابات هذا القسم فقط</button>
+      </div>
       <div class="filt" id="filt"></div>
       <div class="quick"><button id="qUn">أول سؤال غير محلول</button><button id="qFl">التالي للمراجعة ⚑</button><button id="qImp" class="imp">＋ استيراد أسئلتي</button></div>
       <div class="gridh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>لوحة الأسئلة</div>
@@ -690,7 +729,61 @@ function showSaved() { /* quiet indicator in settings + toast on explicit save *
 /* ---------- side panel ---------- */
 $("sect").onchange = e => { S.p.sect = e.target.value; sel = null; persist(false); view = "q"; syncSectReset(); render() };
 // clear the practice answers (and a «اختبر نفسك» test taken from this section) of the selected section only
-function syncSectReset() { $("sectReset").hidden = S.p.sect === "all" }
+function syncSectReset() { $("sectTools").hidden = S.p.sect === "all" }
+const sectKeys = s => { const ks = []; for (let k = 0; k < N; k++) if (Q[k].s === s) ks.push(k); return ks };
+// review page: every question of the section with its correct answer, explanation and story (saved answers are untouched)
+$("sectSolve").onclick = () => { view = "review"; render(); window.scrollTo(0, 0); if (narrow()) { drawer = false; applySide() } };
+function renderReview() {
+  const sect = S.p.sect, ks = sectKeys(sect);
+  $("mn").innerHTML = '<div class="vh rv-h"><h2>📖 ' + esc(sect) + ' – محلول (' + ks.length + ' سؤالًا)</h2><button class="btn" id="rvPdf">⬇ تحميل PDF</button><button class="btn" id="rvBack">العودة للأسئلة</button></div>' +
+    '<p class="note">صفحة مراجعة فقط: تعرض كل أسئلة القسم بإجاباتها الصحيحة، ولا تغيّر إجاباتك المحفوظة.</p>' +
+    ks.map((k, i) => { const q = Q[k]; return '<div class="rv"><div class="rv-n">' + (i + 1) + ' / ' + ks.length + ' · رقم ' + (k + 1) + ' في البنك</div><div class="rv-q">' + esc(q.q) + "</div>" + qTable(q.t) +
+      "<ol>" + q.o.map((o, j) => '<li' + (j === q.a ? ' class="ok"' : "") + ">" + (j === q.a ? "✓ " : "") + L[j] + ") " + esc(o) + "</li>").join("") + "</ol>" +
+      (q.f ? '<div class="rv-f">💡 ' + esc(q.f) + "</div>" : "") +
+      (q.k ? '<details><summary>📖 أحكيلك</summary><div class="stx">' + esc(q.k) + "</div></details>" : "") + "</div>" }).join("") +
+    '<div class="act"><button class="btn" id="rvBack2">العودة للأسئلة</button></div>';
+  const back = () => { view = "q"; render() };
+  $("rvBack").onclick = back; $("rvBack2").onclick = back; $("rvPdf").onclick = pdfAsk;
+}
+// PDF: build a print-only copy of the section and open the browser's print dialog («حفظ بصيغة PDF»)
+$("sectPdf").onclick = () => pdfAsk();
+function pdfAsk() {
+  const sect = S.p.sect; if (sect === "all") return;
+  modal('<h3>تحميل أسئلة القسم PDF</h3><p class="note">«' + esc(sect) + '» – ' + sectKeys(sect).length + ' سؤالًا</p>' +
+    '<div class="fld"><label>محتوى الملف</label>' +
+    '<label class="chk"><input type="radio" name="pm" value="q" checked> الأسئلة فقط (بدون حل)</label>' +
+    '<label class="chk"><input type="radio" name="pm" value="a"> محلولة (الإجابة الصحيحة مميزة)</label>' +
+    '<label class="chk"><input type="radio" name="pm" value="f"> محلولة مع الشرح</label></div>' +
+    '<div class="fld"><label class="chk"><input type="checkbox" id="pKey" checked> إضافة مفتاح الإجابات في آخر الملف</label>' +
+    '<label class="chk"><input type="checkbox" id="pStory"> إضافة قصص «أحكيلك» (مع الحل فقط)</label></div>' +
+    '<p class="note">ستفتح نافذة الطباعة؛ اختر منها «حفظ بصيغة PDF» (Save as PDF).</p>' +
+    '<div class="mact"><button class="btn pri" id="pGo">تحميل</button><button class="btn" id="pX">إلغاء</button></div>', b => {
+    b.querySelector("#pX").onclick = closeModal;
+    b.querySelector("#pGo").onclick = () => {
+      const m = b.querySelector('input[name="pm"]:checked').value;
+      const key = b.querySelector("#pKey").checked, story = b.querySelector("#pStory").checked && m !== "q";
+      closeModal(); printSection(sect, m, key, story);
+    };
+  });
+}
+function printSection(sect, m, key, story) {
+  const ks = sectKeys(sect), solved = m !== "q";
+  let h = '<div class="ph"><h1>' + esc(sect) + '</h1><p>الرخصة المهنية تربوي · ' + ks.length + ' سؤالًا · ' + (solved ? (m === "f" ? "محلولة مع الشرح" : "محلولة") : "بدون حل") + '</p><p>إعداد وتنفيذ: محمد محفوظ · ' + esc(location.host + location.pathname) + "</p></div>";
+  h += ks.map((k, i) => { const q = Q[k]; return '<div class="pq"><b class="pn">' + (i + 1) + ")</b> " + esc(q.q) + qTable(q.t) +
+    "<ol>" + q.o.map((o, j) => "<li" + (solved && j === q.a ? ' class="ok"' : "") + ">" + (solved && j === q.a ? "✓ " : "") + L[j] + ") " + esc(o) + "</li>").join("") + "</ol>" +
+    (m === "f" && q.f ? '<div class="pf">💡 ' + esc(q.f) + "</div>" : "") + (story && q.k ? '<div class="pf">📖 ' + esc(q.k) + "</div>" : "") + "</div>" }).join("");
+  if (key) {
+    const rows = []; for (let i = 0; i < ks.length; i += 10) rows.push("<tr>" + ks.slice(i, i + 10).map((k, j) => "<td>" + (i + j + 1) + ": <b>" + L[Q[k].a] + "</b></td>").join("") + "</tr>");
+    h += '<div class="pkey"><h2>مفتاح الإجابات</h2><table>' + rows.join("") + "</table></div>";
+  }
+  let pa = $("printArea"); if (!pa) { pa = document.createElement("div"); pa.id = "printArea"; document.body.appendChild(pa) }
+  pa.innerHTML = h;
+  const title = document.title; document.title = sect + (solved ? " – محلول" : "");
+  document.body.classList.add("printing");
+  const done = () => { document.body.classList.remove("printing"); document.title = title; window.removeEventListener("afterprint", done) };
+  window.addEventListener("afterprint", done);
+  setTimeout(() => { try { window.print() } catch (e) { done(); toast("تعذّر فتح نافذة الطباعة في هذه الصفحة. افتح الموقع مباشرة وأعد المحاولة.") } }, 100);
+}
 $("sectReset").onclick = () => {
   const sect = S.p.sect; if (sect === "all") return;
   const ks = []; for (let k = 0; k < N; k++) if (Q[k].s === sect) ks.push(k);
@@ -771,6 +864,7 @@ function render() {
   timerUI();
   if (view === "stats") return renderStats();
   if (view === "reports") return renderReports();
+  if (view === "review") { if (S.p.sect !== "all" && S.mode === "prac") return renderReview(); view = "q" }
   const c = ctx();
   if (c.sim && c.done && view === "result") return renderResult();
   if (view === "result") view = "q";
