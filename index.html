@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611032039"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611040842"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -371,6 +371,11 @@ body.vw-m .act .sp{display:none}
 .row select option{background:#ffffff;color:#14233f;font-weight:500}
 .row select option:checked{background:#dbe7ff;color:#0B2A5B;font-weight:700}
 .row select optgroup{background:#eef3fb;color:#0E9F9A;font-weight:800;font-style:normal}
+.misbar{margin-top:8px;display:grid;gap:4px}
+.misbar[hidden]{display:none}
+.misbar button{border:0;border-radius:10px;padding:8px 10px;background:var(--no);color:#fff;font-weight:800;font-size:.85rem;cursor:pointer}
+.misbar button:disabled{opacity:.5;cursor:default}
+.misbar span{font-size:.74rem;color:var(--pn-mut);text-align:center}
 .stools{display:grid;gap:6px;margin-top:6px}
 .stools[hidden]{display:none}
 .sreset{display:block;width:100%;padding:6px 10px;border:1px dashed var(--pn-bd);border-radius:10px;background:transparent;color:var(--pn-mut);font-size:.78rem;font-weight:600;cursor:pointer;text-align:center}
@@ -558,6 +563,7 @@ body.vw-m .act .sp{display:none}
         <button class="sreset del" id="sectReset">↺ مسح إجابات هذا القسم فقط</button>
       </div>
       <div class="filt" id="filt"></div>
+      <div class="misbar" id="misBar" hidden></div>
       <div class="quick"><button id="qUn">أول سؤال غير محلول</button><button id="qFl">التالي للمراجعة ⚑</button><button id="qImp" class="imp">＋ استيراد أسئلتي</button></div>
       <div class="gridh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>لوحة الأسئلة</div>
       <div class="grid" id="grid"></div>
@@ -622,7 +628,7 @@ function remapState(T, map, newN) {
   T.p.A = ra(T.p.A);
   const t = {}; Object.keys(T.p.t || {}).forEach(k => { const m = map(+k); if (m !== null && m < newN) t[m] = T.p.t[k] }); T.p.t = t;
   const pi = map(T.p.i || 0); T.p.i = pi === null ? 0 : pi;
-  T.fav = rs(T.fav); T.flag = rs(T.flag);
+  T.fav = rs(T.fav); T.flag = rs(T.flag); T.p.W = rs(T.p.W);
   if (T.sim) { T.sim.qs = rs(T.sim.qs); T.sim.A = ra(T.sim.A); T.sim.flag = rs(T.sim.flag); if (!T.sim.qs.length) { T.sim = null; T.mode = "prac" } else T.sim.i = Math.min(T.sim.i || 0, T.sim.qs.length - 1) }
 }
 function alignState(T) {
@@ -635,6 +641,8 @@ function alignState(T) {
 alignState(S);
 if (!Array.isArray(S.p.A) || S.p.A.length !== N) { const a = new Array(N).fill(null); (S.p.A || []).forEach((v, k) => { if (k < N) a[k] = v }); S.p.A = a }
 let FAV = new Set(S.fav), FLAG = new Set(S.flag);
+// practice mistakes: a question stays here after a wrong answer, even when it is cleared for another try or answered right later
+let MIS = new Set(S.p.W || []); S.p.A.forEach((a, k) => { if (a !== null && a !== Q[k].a) MIS.add(k) });
 const R = new Set();            // practice: answer revealed without answering (this visit)
 let sel = null;                 // pending choice before confirming
 let storyOpen = null;           // question whose «أحكيلك» story is open
@@ -643,7 +651,7 @@ let filt = "all", query = "";
 let dirty = false;
 
 function persist(sync) {
-  S.fav = [...FAV]; S.flag = [...FLAG]; S.savedAt = Date.now(); S.bn = BN; S.isig = ISIG;
+  S.fav = [...FAV]; S.flag = [...FLAG]; S.p.W = [...MIS]; S.savedAt = Date.now(); S.bn = BN; S.isig = ISIG;
   try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {}
   showSaved();
   if (sync) queueSync();
@@ -795,7 +803,7 @@ $("sectReset").onclick = () => {
     '<div class="mact"><button class="btn danger" id="srYes">نعم، امسح هذا القسم</button><button class="btn" id="srNo">إلغاء</button></div>', b => {
     b.querySelector("#srNo").onclick = closeModal;
     b.querySelector("#srYes").onclick = () => {
-      ks.forEach(k => { S.p.A[k] = null; delete S.p.t[k]; R.delete(k) });
+      ks.forEach(k => { S.p.A[k] = null; delete S.p.t[k]; R.delete(k); MIS.delete(k) });
       if (simHere) { S.sim = null; S.mode = "prac" }
       S.p.i = ks[0]; sel = null; view = "q"; persist(true); closeModal(); render();
       toast("تم مسح إجابات القسم «" + sect + "»");
@@ -823,6 +831,7 @@ function visible(c) {
     if (filt === "fl") return c.flag.has(k);
     if (filt === "fv") return FAV.has(k);
     if (filt === "a") return s !== "u";
+    if (filt === "r" && !c.sim) return MIS.has(k);   // practice: every question ever answered wrong
     return filt === s;
   });
 }
@@ -840,9 +849,22 @@ function paint() {
   $("sectLbl").hidden = c.sim;
   const F = (c.sim && !c.done)
     ? [["all","الكل",n.all],["a","تمت",answered],["u","لم تتم",n.u],["fl","للمراجعة",n.fl],["fv","مفضلة",n.fv]]
-    : [["all","الكل",n.all],["g","صحيحة",n.g],["r","خاطئة",n.r],["u","لم تتم",n.u],["fl","للمراجعة",n.fl],["fv","مفضلة",n.fv]];
+    : [["all","الكل",n.all],["g","صحيحة",n.g],["r","خاطئة",c.sim ? n.r : c.list.filter(k => MIS.has(k)).length],["u","لم تتم",n.u],["fl","للمراجعة",n.fl],["fv","مفضلة",n.fv]];
   if (!F.some(f => f[0] === filt)) filt = "all";
   $("filt").innerHTML = F.map(([k, l, v]) => '<button data-k="' + k + '" class="' + (k === filt ? "on" : "") + '">' + l + "<b>" + v + "</b></button>").join("");
+  // mistakes list: retry them all again; they stay in the list until removed one by one
+  const mis = c.sim ? [] : c.list.filter(k => MIS.has(k)), misOpen = mis.filter(k => S.p.A[k] !== null || R.has(k));
+  $("misBar").hidden = c.sim || filt !== "r" || !mis.length;
+  if (!$("misBar").hidden) {
+    const fixed = mis.filter(k => S.p.A[k] === Q[k].a).length;
+    $("misBar").innerHTML = '<button id="misRetry"' + (misOpen.length ? "" : " disabled") + '>↺ إعادة محاولة الأخطاء (' + misOpen.length + ')</button>' +
+      '<span>صححت ' + fixed + ' من ' + mis.length + ' · تبقى هنا للتدريب مرة أخرى</span>';
+    $("misRetry").onclick = () => {
+      misOpen.forEach(k => { S.p.A[k] = null; R.delete(k) });
+      sel = null; view = "q"; persist(true); go(mis[0]);
+      toast("تم مسح إجابات " + misOpen.length + " سؤالًا. حلها من جديد، وستبقى في قائمة الأخطاء.");
+    };
+  }
   $("filt").querySelectorAll("button").forEach(b => b.onclick = () => { filt = b.dataset.k; paint() });
   const vis = visible(c), sym = { g: "✓", r: "×", u: "—", d: "•" };
   const g = $("grid");
@@ -912,6 +934,7 @@ function render() {
     "</div>";
   h += '<div class="sub hide-focus">' +
     (!c.sim ? (practiceLocked ? '<button class="link" id="bRetry">↺ إعادة المحاولة</button>' : '<button class="link" id="bExplain">👁 شرح الإجابة</button>') : "") +
+    (!c.sim && MIS.has(k) && a === q.a ? '<button class="link" id="bMastered">✓ أتقنته – أزله من قائمة الأخطاء</button>' : "") +
     '<button class="link" id="bReport">⚐ الإبلاغ عن سؤال</button>' +
     '<button class="link" id="bSave">💾 حفظ واستكمال لاحقًا</button>' +
     (c.sim && !c.done ? '<button class="link" id="bSubmit">تسليم الاختبار الآن</button>' : '<button class="link" id="bEnd">' + (c.sim ? "عرض نتيجة الاختبار" : "إنهاء الاختبار وعرض النتيجة") + "</button>") +
@@ -930,6 +953,7 @@ function render() {
   if ($("bExplain")) $("bExplain").onclick = () => { R.add(k); sel = null; render() };
   if ($("bRetry")) $("bRetry").onclick = () => { S.p.A[k] = null; R.delete(k); sel = null; persist(true); render() };
   if ($("bSubmit")) $("bSubmit").onclick = finishAsk;
+  if ($("bMastered")) $("bMastered").onclick = () => { MIS.delete(k); persist(true); render(); toast("أُزيل السؤال من قائمة الأخطاء") };
   if ($("bEnd")) $("bEnd").onclick = () => { if (c.sim) { view = "result"; render() } else finishAsk() };
   if ($("bAI")) $("bAI").onclick = () => explainAI(k, showTruth);
   // the story names the answer, so opening it before answering reveals the answer like «شرح الإجابة»
@@ -954,7 +978,7 @@ function confirmAnswer() {
   const c = ctx(), k = c.cur;
   if (sel === null) { toast("اختر إجابة أولًا"); return }
   if (c.sim) { S.sim.A[k] = sel; sel = null; persist(true); const p = c.list.indexOf(k); if (p < c.list.length - 1) { go(c.list[p + 1]) } else render(); return }
-  S.p.A[k] = sel; sel = null; persist(true); render();
+  S.p.A[k] = sel; if (sel !== Q[k].a) MIS.add(k); sel = null; persist(true); render();
   const fb = $("mn").querySelector(".fb"); if (fb) fb.scrollIntoView({ block: "nearest" });   // show the result without scrolling by hand
 }
 
@@ -1325,7 +1349,7 @@ $("bSet").onclick = () => {
       });
       b.querySelector("#sReset").onclick = () => b.querySelector("#sConf").hidden = false;
       b.querySelector("#sNo").onclick = () => b.querySelector("#sConf").hidden = true;
-      b.querySelector("#sYes").onclick = () => { S.p.A = new Array(N).fill(null); S.p.t = {}; S.sim = null; S.mode = "prac"; S.hist = []; FLAG.clear(); R.clear(); sel = null; view = "q"; persist(true); closeModal(); render(); toast("تم مسح الإجابات") };
+      b.querySelector("#sYes").onclick = () => { S.p.A = new Array(N).fill(null); S.p.t = {}; S.sim = null; S.mode = "prac"; S.hist = []; FLAG.clear(); MIS.clear(); R.clear(); sel = null; view = "q"; persist(true); closeModal(); render(); toast("تم مسح الإجابات") };
       b.querySelector("#sOk").onclick = () => { S.name = b.querySelector("#sName").value.trim(); persist(true);
         const keep = (id, key) => { const f = b.querySelector(id); if (f) { const v = f.value.trim(); try { v ? localStorage.setItem(key, v) : localStorage.removeItem(key) } catch (e) {} } };
         keep("#sKey", AIKEY); keep("#sGKey", GKEY);
@@ -1522,7 +1546,7 @@ async function boot() {
         S = Object.assign(fresh(), JSON.parse(JSON.stringify(d)), { side: S.side, myReports: S.myReports });
         alignState(S);
         if (!Array.isArray(S.p.A) || S.p.A.length !== N) { const a = new Array(N).fill(null); (S.p.A || []).forEach((v, k) => { if (k < N) a[k] = v }); S.p.A = a }
-        FAV = new Set(S.fav); FLAG = new Set(S.flag);
+        FAV = new Set(S.fav); FLAG = new Set(S.flag); MIS = new Set(S.p.W || []);
         try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {}
         applyTheme(); userUI(); fillSects(); render(); toast("تم استرجاع تقدمك من حسابك");
       } else if (S.savedAt) queueSync();
