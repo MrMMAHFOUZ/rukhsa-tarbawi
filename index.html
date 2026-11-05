@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611051102"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611051109"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -380,6 +380,8 @@ body.vw-m .act .sp{display:none}
 .stools[hidden]{display:none}
 .sreset{display:block;width:100%;padding:6px 10px;border:1px dashed var(--pn-bd);border-radius:10px;background:transparent;color:var(--pn-mut);font-size:.78rem;font-weight:600;cursor:pointer;text-align:center}
 .sreset:hover{color:#fff;border-color:var(--teal);background:rgba(20,184,166,.16)}
+.sreset.on{border-style:solid;border-color:var(--teal);color:#fff;background:rgba(20,184,166,.22)}
+.sreset[hidden]{display:none}
 .sreset.del:hover{border-color:var(--no);background:rgba(220,60,60,.18)}
 /* whole section, solved (review page) and its printable copy */
 .rv-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
@@ -558,6 +560,8 @@ body.vw-m .act .sp{display:none}
       <div class="lbl2" id="sectLbl">اختر تصنيف الأسئلة</div>
       <div class="row" id="sectRow"><select id="sect" aria-label="القسم"></select></div>
       <div class="stools" id="sectTools" hidden>
+        <button class="sreset" id="sectMix">🔀 ترتيب عشوائي للأسئلة والإجابات</button>
+        <button class="sreset" id="sectUnmix" hidden>↩ الرجوع للترتيب الأصلي</button>
         <button class="sreset" id="sectSolve">📖 عرض القسم كاملًا محلولًا</button>
         <button class="sreset" id="sectPdf">⬇ تحميل أسئلة القسم PDF</button>
         <button class="sreset del" id="sectReset">↺ مسح إجابات هذا القسم فقط</button>
@@ -670,11 +674,17 @@ function persist(sync) {
 }
 
 /* ---------- context helpers ---------- */
+// «ترتيب عشوائي» per section: one seed per section gives a stable random order of its questions and of each question's options
+const rng = s => () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 };
+const shuffled = (arr, seed) => { const a = arr.slice(), r = rng(seed); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a };
+const mixSeed = () => (S.mode === "prac" && S.p.mix && S.p.mix[S.p.sect]) || 0;
+const optOrder = k => { const sd = mixSeed(), idx = Q[k].o.map((_, i) => i); return sd ? shuffled(idx, sd ^ Math.imul(k + 1, 2654435761)) : idx };
 const sim = () => S.mode === "sim" && S.sim ? S.sim : null;
 function ctx() {
   const s = sim();
   if (s) return { sim: true, done: s.done, list: s.qs, A: s.A, flag: new Set(s.flag), cur: s.qs[s.i] ?? s.qs[0] };
-  const list = []; for (let k = 0; k < N; k++) if (S.p.sect === "all" || Q[k].s === S.p.sect) list.push(k);
+  let list = []; for (let k = 0; k < N; k++) if (S.p.sect === "all" || Q[k].s === S.p.sect) list.push(k);
+  const sd = mixSeed(); if (sd) list = shuffled(list, sd);
   if (!list.includes(S.p.i)) S.p.i = list[0];
   return { sim: false, done: false, list, A: S.p.A, flag: FLAG, cur: S.p.i };
 }
@@ -749,7 +759,23 @@ function showSaved() { /* quiet indicator in settings + toast on explicit save *
 /* ---------- side panel ---------- */
 $("sect").onchange = e => { S.p.sect = e.target.value; sel = null; persist(false); view = "q"; syncSectReset(); render() };
 // clear the practice answers (and a «اختبر نفسك» test taken from this section) of the selected section only
-function syncSectReset() { $("sectTools").hidden = S.p.sect === "all" }
+function syncSectReset() {
+  $("sectTools").hidden = S.p.sect === "all";
+  const on = !!mixSeed();
+  $("sectMix").textContent = on ? "🔀 خلط جديد للأسئلة والإجابات" : "🔀 ترتيب عشوائي للأسئلة والإجابات";
+  $("sectMix").classList.toggle("on", on); $("sectUnmix").hidden = !on;
+}
+// shuffle this section's questions and each question's options (saved answers keep pointing at the real option)
+$("sectMix").onclick = () => {
+  if (S.p.sect === "all") return;
+  S.mode = "prac"; S.p.mix = S.p.mix || {}; S.p.mix[S.p.sect] = 1 + Math.floor(Math.random() * 2147483646);
+  S.p.i = ctx().list[0]; sel = null; view = "q"; persist(true); render();
+  toast("تم خلط ترتيب الأسئلة والإجابات في هذا القسم");
+};
+$("sectUnmix").onclick = () => {
+  if (S.p.mix) delete S.p.mix[S.p.sect];
+  sel = null; view = "q"; persist(true); render(); toast("رجعت الأسئلة والإجابات لترتيبها الأصلي");
+};
 const sectKeys = s => { const ks = []; for (let k = 0; k < N; k++) if (Q[k].s === s) ks.push(k); return ks };
 // review page: every question of the section with its correct answer, explanation and story (saved answers are untouched)
 $("sectSolve").onclick = () => { view = "review"; render(); window.scrollTo(0, 0); if (narrow()) { drawer = false; applySide() } };
@@ -916,20 +942,22 @@ function render() {
   h += '<div class="hint">' + (showTruth ? "" : c.sim ? "اختر إجابتك، وتُحفظ تلقائيًا. تظهر النتيجة بعد تسليم الاختبار:" : "اختر الإجابة الصحيحة، وستظهر النتيجة فورًا:") + "</div>";
   h += '<div class="opts" role="radiogroup">';
   const chosen = sel !== null ? sel : (c.sim && !c.done ? a : null);
-  q.o.forEach((o, i) => {
-    let cl = "", mk = L[i] || i + 1, tag = "";
+  const ord = optOrder(k);   // display order of the options (shuffled when «ترتيب عشوائي» is on); data-i keeps the real option
+  ord.forEach((i, p) => {
+    const o = q.o[i];
+    let cl = "", mk = L[p] || p + 1, tag = "";
     if (showTruth) {
       if (i === q.a) { cl = " ok"; mk = "✓"; tag = '<span class="tag">الإجابة الصحيحة</span>' }
       else if (i === a) { cl = " no"; mk = "×"; tag = '<span class="tag">إجابتك</span>' }
     } else if (i === chosen) { cl = " sel" }
-    h += '<button class="op' + cl + '" role="radio" aria-checked="' + (i === chosen) + '" data-i="' + i + '"' + (showTruth ? " disabled" : "") + '><span class="ck">' + mk + '</span><span class="tx">' + esc(o) + "</span>" + tag + (showTruth ? "" : '<span class="key">' + (i + 1) + "</span>") + "</button>";
+    h += '<button class="op' + cl + '" role="radio" aria-checked="' + (i === chosen) + '" data-i="' + i + '"' + (showTruth ? " disabled" : "") + '><span class="ck">' + mk + '</span><span class="tx">' + esc(o) + "</span>" + tag + (showTruth ? "" : '<span class="key">' + (p + 1) + "</span>") + "</button>";
   });
   h += "</div>";
   if (showTruth) {
     const rev = a === null || a === undefined, ok = a === q.a;
     const kind = rev ? "i" : ok ? "g" : "r";
     const title = rev ? "شرح الإجابة" : ok ? "✓ إجابة صحيحة" : "× إجابة خاطئة";
-    h += '<div class="fb ' + kind + '"><h4>' + title + "</h4><p><b>الإجابة الصحيحة: " + L[q.a] + ") " + esc(q.o[q.a]) + "</b></p><p>" + esc(q.f) + "</p></div>";
+    h += '<div class="fb ' + kind + '"><h4>' + title + "</h4><p><b>الإجابة الصحيحة: " + L[ord.indexOf(q.a)] + ") " + esc(q.o[q.a]) + "</b></p><p>" + esc(q.f) + "</p></div>";
   }
   if (q.k && (!c.sim || c.done)) h += '<div class="story" id="stBox"' + (showTruth && storyOpen === k ? "" : " hidden") + '><h4>📖 أحكيلك… طريقة لا تُنسى</h4><div class="stx">' + esc(q.k).replace(/^([🎬🔑].*)$/gmu, "<b>$1</b>") + "</div></div>";
   if (!c.sim || c.done) h += '<div class="aibox" id="aiBox" hidden><h4>🤖 ' + (showTruth ? "شرح وافٍ للسؤال" : "شرح السؤال (دون ذكر الإجابة)") + '</h4><div class="ai" id="aiOut"></div><div class="aiact" id="aiAct"></div></div>';
@@ -1518,8 +1546,9 @@ document.addEventListener("keydown", e => {
   const c = ctx(), k = c.cur, q = Q[k];
   const open = c.sim ? !c.done : (c.A[k] === null && !R.has(k));
   const n = parseInt(e.key, 10);
-  if (open && n >= 1 && n <= q.o.length) { e.preventDefault(); choose(n - 1) }
-  else if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const cur = sel !== null ? sel : (c.sim && c.A[k] !== null ? c.A[k] : -1); const nx = e.key === "ArrowDown" ? Math.min(q.o.length - 1, cur + 1) : Math.max(0, cur - 1); if (c.sim) { choose(nx); return } sel = nx; render(); const b = $("mn").querySelector('.op[data-i="' + sel + '"]'); b && b.focus() }
+  const ord = optOrder(k);   // keys follow the order shown on screen
+  if (open && n >= 1 && n <= q.o.length) { e.preventDefault(); choose(ord[n - 1]) }
+  else if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const cur = ord.indexOf(sel !== null ? sel : (c.sim && c.A[k] !== null ? c.A[k] : -1)); const nx = ord[e.key === "ArrowDown" ? Math.min(q.o.length - 1, cur + 1) : Math.max(0, cur - 1)]; if (c.sim) { choose(nx); return } sel = nx; render(); const b = $("mn").querySelector('.op[data-i="' + sel + '"]'); b && b.focus() }
   else if (e.key === "Enter" && open && sel !== null) { e.preventDefault(); confirmAnswer() }
   else if (e.key === "ArrowLeft") { const p = c.list.indexOf(k); if (p < c.list.length - 1) go(c.list[p + 1]) }
   else if (e.key === "ArrowRight") { const p = c.list.indexOf(k); if (p > 0) go(c.list[p - 1]) }
