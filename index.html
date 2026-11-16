@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611151122"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611160717"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -604,6 +604,13 @@ body.gated{overflow:hidden}
 <script>
 /* ---------- welcome screen: accounts kept on this device (name + password), each with its own progress ---------- */
 const ACC_LIST = "rm_profiles", ACC_CUR = "rm_profile", ACC_IN = "rm_entered";
+// usage log for the owner (a Google Sheet web app): event, name, account id, device type — never the password. Empty = off.
+const STATS_URL = "https://script.google.com/macros/s/AKfycbwhEFlMH-ePayzzDVacw7a_cpcd0dQCPFa7Uaf7T1EsiZkwRpaFi6EGJVt_mtdMzMOn/exec";
+function track(ev, p) {
+  if (!STATS_URL || !p) return;
+  const body = JSON.stringify({ e: ev, name: p.name, id: p.id, dev: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? "جوال" : "كمبيوتر", v: typeof APP_VER !== "undefined" ? APP_VER : "" });
+  try { fetch(STATS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body, keepalive: true }).catch(() => {}) } catch (e) {}
+}
 let PROFILES = []; try { PROFILES = JSON.parse(localStorage.getItem(ACC_LIST) || "[]") } catch (e) {}
 let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PROFILES.find(p => p.id === id) || null } catch (e) {}
 (function () {
@@ -622,13 +629,14 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
       '<label class="g-fld">' + iUser + '<input id="gName" name="username" placeholder="اسم المستخدم" maxlength="40" autocomplete="username" required></label>' +
       '<label class="g-fld">' + iLock + '<input id="gPass" name="password" type="password" placeholder="كلمة المرور" maxlength="60" autocomplete="current-password" required></label>' +
       '<div class="g-err" id="gErr"></div><button class="g-btn" type="submit">دخول ⇦</button></form>' +
-      '<p class="g-note">أول مرة؟ اكتب اسمك واختر كلمة مرور، فيُنشأ حسابك تلقائيًا. الحساب وتقدّمك محفوظان على هذا الجهاز وهذا المتصفح فقط.</p>';
+      '<p class="g-note">أول مرة؟ اكتب اسمك واختر كلمة مرور، فيُنشأ حسابك تلقائيًا. الحساب وتقدّمك محفوظان على هذا الجهاز وهذا المتصفح فقط.' + (STATS_URL ? ' يُسجَّل اسمك ووقت دخولك لأغراض إحصائية فقط، ولا تُرسَل كلمة المرور.' : "") + '</p>';
     g("gForm").onsubmit = async e => {
       e.preventDefault();
       const name = g("gName").value.trim().replace(/\s+/g, " "), pass = g("gPass").value, err = g("gErr");
       if (name.length < 2) { err.textContent = "اكتب اسمًا من حرفين على الأقل"; return }
       if (pass.length < 4) { err.textContent = "كلمة المرور 4 أحرف أو أرقام على الأقل"; return }
       let p = PROFILES.find(x => norm(x.name) === norm(name));
+      const isNew = !p;
       if (p) { if ((await hash(p.salt, pass)) !== p.hash) { err.textContent = "كلمة المرور غير صحيحة لهذا الاسم"; return } }
       else {
         const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -636,6 +644,7 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
         try { const old = localStorage.getItem("rm_app_v2"); if (!PROFILES.length && old) localStorage.setItem("rm_app_v2_" + p.id, old) } catch (x) {}   // the first account keeps the progress saved before accounts existed
         PROFILES.push(p); try { localStorage.setItem(ACC_LIST, JSON.stringify(PROFILES)) } catch (x) {}
       }
+      track(isNew ? "register" : "login", p);
       try { localStorage.setItem(ACC_CUR, p.id); sessionStorage.removeItem(ACC_IN) } catch (x) {}
       let ok = false; try { ok = localStorage.getItem(ACC_CUR) === p.id } catch (x) {}
       if (ok) location.reload(); else { PROFILE = p; homeView() }   // storage blocked (private window, preview): continue without saving
@@ -647,7 +656,7 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
       '<button class="g-sect" id="gEdu"><span class="ic">📘</span><span><b>الاختبار التربوي</b><small>القسم العام التربوي: تدريب، اختبر نفسك، أحكيلك</small></span></button>' +
       '<button class="g-sect dim" id="gSpec"><span class="ic">🎓</span><span><b>اختبار التخصص</b><small>أسئلة التخصصات</small></span><span class="soon">قريبًا</span></button>' +
       '</div><div class="g-err" id="gErr" style="margin-top:10px;text-align:center"></div><div class="g-links"><button id="gOut">تسجيل الخروج</button><button id="gSwitch">الدخول بحساب آخر</button></div>';
-    g("gEdu").onclick = () => { try { sessionStorage.setItem(ACC_IN, PROFILE.id) } catch (x) {} hide() };
+    g("gEdu").onclick = () => { track("enter", PROFILE); try { sessionStorage.setItem(ACC_IN, PROFILE.id) } catch (x) {} hide() };
     g("gSpec").onclick = () => { g("gErr").style.color = "#8a5a00"; g("gErr").textContent = "قسم اختبار التخصص قيد الإعداد، وسيُضاف قريبًا إن شاء الله." };
     const out = () => { try { localStorage.removeItem(ACC_CUR); sessionStorage.removeItem(ACC_IN) } catch (x) {} location.reload() };
     g("gOut").onclick = out; g("gSwitch").onclick = out;
