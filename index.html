@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611160845"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية تربوي</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611160902"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية للمعلمين</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -700,7 +700,7 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
   <div class="tb-in">
     <div class="brand">
       <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 10 4 22l28 12 28-12z" fill="#F2B23C"/><path d="M14 28v11c0 4.5 8 9 18 9s18-4.5 18-9V28l-18 8z" fill="#fff"/><path d="M56 24v15" stroke="#F2B23C" stroke-width="3" stroke-linecap="round"/><circle cx="56" cy="42" r="3.5" fill="#F2B23C"/><path d="M14 52h36" stroke="#0E9F9A" stroke-width="4" stroke-linecap="round"/></svg>
-      <div><h1>الرخصة المهنية تربوي</h1><p>منصة تدريب واستعداد للرخصة المهنية</p><p class="by">إعداد وتنفيذ: محمد محفوظ</p></div>
+      <div><h1>الرخصة المهنية للمعلمين</h1><p>منصة تدريب واستعداد للرخصة المهنية</p><p class="by">إعداد وتنفيذ: محمد محفوظ</p></div>
     </div>
     <nav class="tnav" aria-label="القائمة">
       <div class="modes hide-focus" role="tablist" aria-label="نوع الاختبار">
@@ -1008,7 +1008,7 @@ function pdfAsk() {
 }
 function printSection(sect, m, key, story) {
   const ks = sectKeys(sect), solved = m !== "q";
-  let h = '<div class="ph"><h1>' + esc(sect) + '</h1><p>الرخصة المهنية تربوي · ' + ks.length + ' سؤالًا · ' + (solved ? (m === "f" ? "محلولة مع الشرح" : "محلولة") : "بدون حل") + '</p><p>إعداد وتنفيذ: محمد محفوظ · ' + esc(location.host + location.pathname) + "</p></div>";
+  let h = '<div class="ph"><h1>' + esc(sect) + '</h1><p>الرخصة المهنية للمعلمين · ' + ks.length + ' سؤالًا · ' + (solved ? (m === "f" ? "محلولة مع الشرح" : "محلولة") : "بدون حل") + '</p><p>إعداد وتنفيذ: محمد محفوظ · ' + esc(location.host + location.pathname) + "</p></div>";
   h += ks.map((k, i) => { const q = Q[k]; return '<div class="pq"><b class="pn">' + (i + 1) + ")</b> " + esc(q.q) + qTable(q.t) +
     "<ol>" + q.o.map((o, j) => "<li" + (solved && j === q.a ? ' class="ok"' : "") + ">" + (solved && j === q.a ? "✓ " : "") + L[j] + ") " + esc(o) + "</li>").join("") + "</ol>" +
     (m === "f" && q.f ? '<div class="pf">💡 ' + esc(q.f) + "</div>" : "") + (story && q.k ? '<div class="pf">📖 ' + esc(q.k) + "</div>" : "") + "</div>" }).join("");
