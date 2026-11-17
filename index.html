@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611170855"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="apple-mobile-web-app-title" content="الرخصة المهنية للمعلمين"><meta name="application-name" content="الرخصة المهنية للمعلمين"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية للمعلمين</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611170900"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="apple-mobile-web-app-title" content="الرخصة المهنية للمعلمين"><meta name="application-name" content="الرخصة المهنية للمعلمين"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية للمعلمين</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -874,6 +874,10 @@ const SPECS = {
 const stdName = s => s[0] + " " + s[1];
 const trackOf = q => { for (const id in SPECS) if (q.s.startsWith(SPECS[id].code + ".")) return id; return "edu" };
 Q.forEach(q => q.tr = trackOf(q));
+// display number: each track (التربوي / every specialty) is numbered from 1 on its own; k stays the saved-answer key
+const TNO = []; { const c = {}; Q.forEach((q, k) => { TNO[k] = c[q.tr] = (c[q.tr] || 0) + 1 }) }
+const dn = k => TNO[k] || k + 1;
+const trTag = q => q.tr && q.tr !== "edu" ? "تخصص " + SPECS[q.tr].name : q.d;
 let TRACK = "edu"; try { TRACK = sessionStorage.getItem("rm_track") || "edu" } catch (e) {}
 if (TRACK !== "edu" && !SPECS[TRACK]) TRACK = "edu";
 const trackSects = () => TRACK === "edu" ? SECTS.filter(s => Q.some(q => q.s === s && q.tr === "edu")) : SPECS[TRACK].domains.flatMap(d => d[2].map(stdName));
@@ -1046,7 +1050,7 @@ function renderReview() {
   const sect = S.p.sect, ks = sectKeys(sect);
   $("mn").innerHTML = '<div class="vh rv-h"><h2>📖 ' + esc(sect) + ' – محلول (' + ks.length + ' سؤالًا)</h2><button class="btn" id="rvPdf">⬇ تحميل PDF</button><button class="btn" id="rvBack">العودة للأسئلة</button></div>' +
     '<p class="note">صفحة مراجعة فقط: تعرض كل أسئلة القسم بإجاباتها الصحيحة، ولا تغيّر إجاباتك المحفوظة.</p>' +
-    ks.map((k, i) => { const q = Q[k]; return '<div class="rv"><div class="rv-n">' + (i + 1) + ' / ' + ks.length + ' · رقم ' + (k + 1) + ' في البنك</div><div class="rv-q">' + esc(q.q) + "</div>" + qTable(q.t) +
+    ks.map((k, i) => { const q = Q[k]; return '<div class="rv"><div class="rv-n">' + (i + 1) + ' / ' + ks.length + ' · رقم ' + dn(k) + ' في البنك</div><div class="rv-q">' + esc(q.q) + "</div>" + qTable(q.t) +
       "<ol>" + q.o.map((o, j) => '<li' + (j === q.a ? ' class="ok"' : "") + ">" + (j === q.a ? "✓ " : "") + L[j] + ") " + esc(o) + "</li>").join("") + "</ol>" +
       (q.f ? '<div class="rv-f">💡 ' + esc(q.f) + "</div>" : "") +
       (q.k ? '<details><summary>📖 أحكيلك</summary><div class="stx">' + esc(q.k) + "</div></details>" : "") + "</div>" }).join("") +
@@ -1120,7 +1124,7 @@ $("q").onkeydown = e => {
 };
 function matches(k) {
   if (!query) return true;
-  if (/^\d+$/.test(query)) return String(k + 1).startsWith(query);
+  if (/^\d+$/.test(query)) return String(dn(k)).startsWith(query);
   const s = query.toLowerCase(); const q = Q[k];
   return q.q.toLowerCase().includes(s) || q.o.some(o => o.toLowerCase().includes(s));
 }
@@ -1169,7 +1173,7 @@ function paint() {
   $("filt").querySelectorAll("button").forEach(b => b.onclick = () => { filt = b.dataset.k; paint() });
   const vis = visible(c), sym = { g: "✓", r: "×", u: "—", d: "•" };
   const g = $("grid");
-  g.innerHTML = vis.length ? vis.map(k => { const s = stateOf(c, k); return '<button data-k="' + k + '" class="' + s + (k === c.cur && view === "q" ? " cur" : "") + (c.flag.has(k) ? " fl" : "") + (FAV.has(k) ? " fv" : "") + '" aria-label="السؤال ' + (k + 1) + '">' + (k + 1) + "<i>" + sym[s] + "</i></button>" }).join("") : '<div class="empty">لا توجد أسئلة مطابقة.</div>';
+  g.innerHTML = vis.length ? vis.map(k => { const s = stateOf(c, k); return '<button data-k="' + k + '" class="' + s + (k === c.cur && view === "q" ? " cur" : "") + (c.flag.has(k) ? " fl" : "") + (FAV.has(k) ? " fv" : "") + '" aria-label="السؤال ' + dn(k) + '">' + dn(k) + "<i>" + sym[s] + "</i></button>" }).join("") : '<div class="empty">لا توجد أسئلة مطابقة.</div>';
   g.querySelectorAll("button").forEach(b => b.onclick = () => { go(+b.dataset.k); if (narrow()) { drawer = false; applySide() } });
   const cb = g.querySelector(".cur");
   if (cb) { const top = cb.offsetTop - g.offsetTop; if (top < g.scrollTop || top > g.scrollTop + g.clientHeight - 30) g.scrollTop = top - g.clientHeight / 2 }
@@ -1217,11 +1221,11 @@ function render() {
   let score = 0; c.list.forEach(x => { if (c.A[x] === Q[x].a) score++ });
   const flagged = c.flag.has(k);
   qcSync(k, c.sim ? !c.done && (a === null || a === undefined) : !practiceLocked);
-  let h = '<div class="qhead"><div class="qno">السؤال ' + (pos + 1) + ' <small>من ' + c.list.length + (c.sim ? "" : (S.p.sect === "all" ? "" : " · " + esc(S.p.sect))) + ' · رقم ' + (k + 1) + ' في البنك</small></div>' +
+  let h = '<div class="qhead"><div class="qno">السؤال ' + (pos + 1) + ' <small>من ' + c.list.length + (c.sim ? "" : (S.p.sect === "all" ? "" : " · " + esc(S.p.sect))) + ' · رقم ' + dn(k) + ' في البنك</small></div>' +
     '<span class="qclock" id="qClock" role="timer" aria-label="مؤقت السؤال" hidden></span>' +
     '<div class="prog hide-focus-not"><div class="pg"><i style="width:' + pct(answered, c.list.length) + '%"></i></div><div class="pl"><span>تمت الإجابة: ' + answered + ' / ' + c.list.length + '</span><span>' + pct(answered, c.list.length) + '٪</span></div></div>' +
     ((!c.sim || c.done) ? '<span class="score">الدرجة: ' + score + '</span>' : "") + "</div>";
-  h += '<div class="qbox"><div class="chips"><span class="chip src">' + esc(q.n ? q.s + " – س" + q.n : q.s) + '</span><span class="chip">' + esc(q.d) + '</span>' + (flagged ? '<span class="chip flag">⚑ للمراجعة لاحقًا</span>' : "") + (FAV.has(k) ? '<span class="chip">★ مفضلة</span>' : "") + "</div>";
+  h += '<div class="qbox"><div class="chips"><span class="chip src">' + esc(q.n ? q.s + " – س" + q.n : q.s) + '</span><span class="chip">' + esc(trTag(q)) + '</span>' + (flagged ? '<span class="chip flag">⚑ للمراجعة لاحقًا</span>' : "") + (FAV.has(k) ? '<span class="chip">★ مفضلة</span>' : "") + "</div>";
   h += '<div class="qt" dir="auto">' + esc(q.q) + "</div>" + qTable(q.t) + "</div>";
   h += '<div class="hint">' + (showTruth ? "" : c.sim ? "اختر إجابتك، وتُحفظ تلقائيًا. تظهر النتيجة بعد تسليم الاختبار:" : "اختر الإجابة الصحيحة، وستظهر النتيجة فورًا:") + "</div>";
   h += '<div class="opts" role="radiogroup">';
@@ -1316,7 +1320,7 @@ function finishAsk() {
   modal('<h3>' + (c.sim ? "تسليم الاختبار؟" : "إنهاء الاختبار؟") + "</h3>" +
     (un.length ? "<p>تبقّى <b>" + un.length + "</b> " + (un.length === 1 ? "سؤال" : "سؤالًا") + " دون إجابة.</p>" : "") +
     (fl.length ? "<p>لديك <b>" + fl.length + "</b> معلّمة للمراجعة ⚑.</p>" : "") +
-    (un.length ? '<p class="note">أول الأسئلة غير المجابة: ' + un.slice(0, 12).map(k => k + 1).join("، ") + (un.length > 12 ? "…" : "") + "</p>" : "") +
+    (un.length ? '<p class="note">أول الأسئلة غير المجابة: ' + un.slice(0, 12).map(dn).join("، ") + (un.length > 12 ? "…" : "") + "</p>" : "") +
     "<p>إجاباتك محفوظة ولن تُفقد إذا عدت للمراجعة.</p>" +
     '<div class="mact"><button class="btn pri" id="mRev">' + (un.length ? "مراجعة غير المجابة" : "مراجعة المعلّمة") + '</button><button class="btn" id="mEnd">' + (c.sim ? "تسليم الاختبار" : "عرض النتيجة") + "</button></div>",
     b => { b.querySelector("#mRev").onclick = () => { closeModal(); go(un.length ? un[0] : fl[0]) }; b.querySelector("#mEnd").onclick = done });
@@ -1382,7 +1386,7 @@ function renderResult() {
   paint();
 }
 const kpi = (l, v) => '<div class="kpi"><small>' + l + "</small><b>" + v + "</b></div>";
-const lst = (t, arr, ic) => arr.length ? '<div class="sec-t">' + t + " (" + arr.length + ")</div>" + arr.slice(0, 120).map(k => '<button class="rw" data-k="' + k + '">' + ic + " " + (k + 1) + ". " + esc(Q[k].q.slice(0, 90)) + "…</button>").join("") : "";
+const lst = (t, arr, ic) => arr.length ? '<div class="sec-t">' + t + " (" + arr.length + ")</div>" + arr.slice(0, 120).map(k => '<button class="rw" data-k="' + k + '">' + ic + " " + dn(k) + ". " + esc(Q[k].q.slice(0, 90)) + "…</button>").join("") : "";
 function bars(dom) {
   const rows = Object.entries(dom).filter(([, v]) => v[1]).sort((a, b) => pct(a[1][0], a[1][1]) - pct(b[1][0], b[1][1]));
   if (!rows.length) return '<p class="note">لا توجد إجابات بعد.</p>';
@@ -1453,7 +1457,7 @@ function renderStats() {
 
 /* ---------- report a question ---------- */
 function reportQ(k) {
-  modal("<h3>الإبلاغ عن السؤال " + (k + 1) + '</h3><p class="note">' + esc(Q[k].q.slice(0, 120)) + "…</p>" +
+  modal("<h3>الإبلاغ عن السؤال " + dn(k) + '</h3><p class="note">' + esc(Q[k].q.slice(0, 120)) + "…</p>" +
     '<div class="fld"><label>سبب البلاغ</label><div class="radios">' +
     ["الإجابة المعتمدة قد تكون خاطئة", "السؤال غامض أو يحتمل أكثر من إجابة", "مشكلة في الصياغة أو الإملاء", "سبب آخر"].map((r, i) => '<label><input type="radio" name="rr" value="' + esc(r) + '"' + (i ? "" : " checked") + "> " + r + "</label>").join("") +
     '</div></div><div class="fld"><label for="rNote">تفاصيل (اختياري)</label><textarea id="rNote" rows="3" placeholder="مثال: أرى أن الإجابة الصحيحة هي (ب) لأن…"></textarea></div>' +
