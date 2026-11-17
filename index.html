@@ -1,4 +1,4 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611161026"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="apple-mobile-web-app-title" content="الرخصة المهنية للمعلمين"><meta name="application-name" content="الرخصة المهنية للمعلمين"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية للمعلمين</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style><script>window.APP_VER="202611170756"</script><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#102F5D"><meta name="apple-mobile-web-app-title" content="الرخصة المهنية للمعلمين"><meta name="application-name" content="الرخصة المهنية للمعلمين"><meta name="description" content="بنك أسئلة تفاعلي لاختبار الرخصة المهنية – القسم العام التربوي"></head><body><title>الرخصة المهنية للمعلمين</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Tajawal:wght@500;700;800&display=swap">
@@ -391,6 +391,14 @@ body.vw-m .act .sp{display:none}
 /* whole section, solved (review page) and its printable copy */
 .rv-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .rv-h h2{margin:0;flex:1;font-size:1.15rem}
+.spec-dom{border:1px solid var(--bd);border-radius:16px;background:var(--card);margin:0 0 12px;overflow:hidden}
+.spec-dom h3{margin:0;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--soft);font-size:1rem;color:var(--navy)}
+.spec-dom h3 b{background:var(--gold);color:#3a2600;border-radius:999px;padding:2px 10px;font-size:.85rem}
+.spec-std{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 14px;border-top:1px solid var(--bd);font-size:.92rem}
+.spec-std.on{background:var(--blue-soft)}
+.spec-std code{font-weight:800;color:var(--blue-ink);direction:ltr}
+.spec-std span{text-align:left}
+.spec-std small{color:var(--mut);white-space:nowrap}
 .rv{border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:12px;background:var(--card)}
 .rv .rv-n{font-size:.78rem;color:var(--mut);margin-bottom:4px}
 .rv .rv-q{font-family:var(--f-q,var(--f-display));font-weight:700;font-size:1.05rem;line-height:1.9}
@@ -700,12 +708,26 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
   function homeView() {
     card.innerHTML = '<h2>👋 مرحبًا، ' + esc(PROFILE.name) + '</h2><div class="g-sects">' +
       '<button class="g-sect" id="gEdu"><span class="ic">📘</span><span><b>الاختبار التربوي</b><small>القسم العام التربوي: تدريب، اختبر نفسك، أحكيلك</small></span></button>' +
-      '<button class="g-sect dim" id="gSpec"><span class="ic">🎓</span><span><b>اختبار التخصص</b><small>أسئلة التخصصات</small></span><span class="soon">قريبًا</span></button>' +
+      '<button class="g-sect dim" id="gSpec"><span class="ic">🎓</span><span><b>اختبار التخصص</b><small>اختر تخصصك</small></span></button>' +
       '</div><div class="g-err" id="gErr" style="margin-top:10px;text-align:center"></div><div class="g-links"><button id="gOut">تسجيل الخروج</button><button id="gSwitch">الدخول بحساب آخر</button></div>';
-    g("gEdu").onclick = () => { track("enter", PROFILE); try { sessionStorage.setItem(ACC_IN, PROFILE.id) } catch (x) {} hide() };
-    g("gSpec").onclick = () => { const s = g("gSpec").querySelector("small"); s.textContent = "قيد الإعداد، وسيُضاف قريبًا إن شاء الله"; s.style.color = "#8a5a00" };
+    g("gEdu").onclick = () => enter("edu");
+    g("gSpec").onclick = specView;
     const out = () => { try { localStorage.removeItem(ACC_CUR); sessionStorage.removeItem(ACC_IN) } catch (x) {} location.reload() };
     g("gOut").onclick = out; g("gSwitch").onclick = out;
+  }
+  // the specialties (SPECS is defined by the app script)
+  function specView() {
+    card.innerHTML = '<h2>🎓 اختبار التخصص</h2><div class="g-sects">' +
+      Object.keys(SPECS).map(id => { const sp = SPECS[id], n = Q.filter(q => q.tr === id).length;
+        return '<button class="g-sect" data-sp="' + id + '"><span class="ic">🇬🇧</span><span><b>' + esc(sp.name) + '</b><small>' + esc(sp.stage) + ' · ' + (n ? n + " سؤالًا" : "تُضاف الأسئلة قريبًا") + '</small></span></button>' }).join("") +
+      '</div><div class="g-links"><button id="gBack">→ رجوع</button><span></span></div>';
+    card.querySelectorAll("[data-sp]").forEach(b => b.onclick = () => enter(b.dataset.sp));
+    g("gBack").onclick = homeView;
+  }
+  function enter(id) {
+    track(id === "edu" ? "enter" : "spec:" + id, PROFILE);
+    try { sessionStorage.setItem(ACC_IN, PROFILE.id) } catch (x) {}
+    hide(); if (window.enterTrack) window.enterTrack(id);
   }
   function show() { gate.hidden = false; document.body.classList.add("gated"); PROFILE ? homeView() : loginView() }
   function hide() { gate.hidden = true; document.body.classList.remove("gated"); window.scrollTo(0, 0) }
@@ -720,7 +742,7 @@ let PROFILE = null; try { const id = localStorage.getItem(ACC_CUR); PROFILE = PR
   <div class="tb-in">
     <div class="brand">
       <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 10 4 22l28 12 28-12z" fill="#F2B23C"/><path d="M14 28v11c0 4.5 8 9 18 9s18-4.5 18-9V28l-18 8z" fill="#fff"/><path d="M56 24v15" stroke="#F2B23C" stroke-width="3" stroke-linecap="round"/><circle cx="56" cy="42" r="3.5" fill="#F2B23C"/><path d="M14 52h36" stroke="#0E9F9A" stroke-width="4" stroke-linecap="round"/></svg>
-      <div><h1>الرخصة المهنية للمعلمين</h1><p>منصة تدريب واستعداد للرخصة المهنية</p><p class="by">إعداد وتنفيذ: محمد محفوظ</p></div>
+      <div><h1>الرخصة المهنية للمعلمين</h1><p id="trackLbl">منصة تدريب واستعداد للرخصة المهنية</p><p class="by">إعداد وتنفيذ: محمد محفوظ</p></div>
     </div>
     <nav class="tnav" aria-label="القائمة">
       <div class="modes hide-focus" role="tablist" aria-label="نوع الاختبار">
@@ -828,6 +850,33 @@ const DOMAINS = [
 Q.forEach(q => { const d = DOMAINS.find(([, re]) => re.test(q.q)); q.d = d ? d[0] : "تربوي عام" });
 const DOM_NAMES = [...DOMAINS.map(d => d[0]), "تربوي عام"];
 const SECTS = [...new Set(Q.map(q => q.s))];
+/* ---------- tracks: «الاختبار التربوي» (the general bank) and the specialty exams.
+   A specialty question belongs to a standard section named «code + description», e.g. «6.9.1 Understanding …». ---------- */
+const SPECS = {
+  en2: { name: "لغة إنجليزية 2", code: "6.9", stage: "المرحلتان المتوسطة والثانوية", domains: [
+    ["Language Pedagogy – أصول تدريس اللغة", 45, [
+      ["6.9.1", "Understanding and applying teaching strategies relevant to language skills"],
+      ["6.9.2", "Planning learning activities relevant to L2 learning objectives and curriculum requirements"],
+      ["6.9.3", "Developing and selecting appropriate assessment tools consistent with L2 learning objectives"],
+      ["6.9.4", "Using a variety of teaching methods that promote student engagement in L2 learning"]]],
+    ["Instructional Design – التصميم التعليمي", 19, [
+      ["6.9.5", "Setting appropriate L2 learning objectives"],
+      ["6.9.6", "Accessing and designing a range of appropriate L2 learning resources"],
+      ["6.9.7", "Planning effective learning experiences based on students' culture, abilities, needs, and interests"]]],
+    ["Theoretical Knowledge and Application – المعرفة النظرية وتطبيقها", 15, [
+      ["6.9.8", "Demonstrating and applying knowledge of second language acquisition in relation to L2 instruction"],
+      ["6.9.9", "Understanding the theoretical and methodological developments of TESOL/TEFL"]]],
+    ["Linguistic Knowledge – المعرفة اللغوية", 21, [
+      ["6.9.10", "Understanding language as a system"],
+      ["6.9.11", "Understanding and applying the theoretical knowledge of English linguistics"]]]
+  ] }
+};
+const stdName = s => s[0] + " " + s[1];
+const trackOf = q => { for (const id in SPECS) if (q.s.startsWith(SPECS[id].code + ".")) return id; return "edu" };
+Q.forEach(q => q.tr = trackOf(q));
+let TRACK = "edu"; try { TRACK = sessionStorage.getItem("rm_track") || "edu" } catch (e) {}
+if (TRACK !== "edu" && !SPECS[TRACK]) TRACK = "edu";
+const trackSects = () => TRACK === "edu" ? SECTS.filter(s => Q.some(q => q.s === s && q.tr === "edu")) : SPECS[TRACK].domains.flatMap(d => d[2].map(stdName));
 
 /* ---------- state ---------- */
 const fresh = () => ({ v: 2, savedAt: 0, name: "", theme: "system", oneTap: false, side: true,
@@ -893,11 +942,11 @@ const rng = s => () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15,
 const shuffled = (arr, seed) => { const a = arr.slice(), r = rng(seed); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a };
 const mixSeed = () => (S.mode === "prac" && S.p.mix && S.p.mix[S.p.sect]) || 0;
 const optOrder = k => { const sd = mixSeed(), idx = Q[k].o.map((_, i) => i); return sd ? shuffled(idx, sd ^ Math.imul(k + 1, 2654435761)) : idx };
-const sim = () => S.mode === "sim" && S.sim ? S.sim : null;
+const sim = () => S.mode === "sim" && S.sim && (S.sim.tr || "edu") === TRACK ? S.sim : null;   // a test belongs to the track it was started in
 function ctx() {
   const s = sim();
   if (s) return { sim: true, done: s.done, list: s.qs, A: s.A, flag: new Set(s.flag), cur: s.qs[s.i] ?? s.qs[0] };
-  let list = []; for (let k = 0; k < N; k++) if (S.p.sect === "all" || Q[k].s === S.p.sect) list.push(k);
+  let list = []; for (let k = 0; k < N; k++) if (Q[k].tr === TRACK && (S.p.sect === "all" || Q[k].s === S.p.sect)) list.push(k);
   const sd = mixSeed(); if (sd) list = shuffled(list, sd);
   if (!list.includes(S.p.i)) S.p.i = list[0];
   return { sim: false, done: false, list, A: S.p.A, flag: FLAG, cur: S.p.i };
@@ -1157,6 +1206,7 @@ function render() {
   if (view === "stats") return renderStats();
   if (view === "reports") return renderReports();
   if (view === "review") { if (S.p.sect !== "all" && S.mode === "prac") return renderReview(); view = "q" }
+  if (!ctx().list.length) return renderEmpty();   // a specialty (or section) with no questions yet
   const c = ctx();
   if (c.sim && c.done && view === "result") return renderResult();
   if (view === "result") view = "q";
@@ -1172,7 +1222,7 @@ function render() {
     '<div class="prog hide-focus-not"><div class="pg"><i style="width:' + pct(answered, c.list.length) + '%"></i></div><div class="pl"><span>تمت الإجابة: ' + answered + ' / ' + c.list.length + '</span><span>' + pct(answered, c.list.length) + '٪</span></div></div>' +
     ((!c.sim || c.done) ? '<span class="score">الدرجة: ' + score + '</span>' : "") + "</div>";
   h += '<div class="qbox"><div class="chips"><span class="chip src">' + esc(q.n ? q.s + " – س" + q.n : q.s) + '</span><span class="chip">' + esc(q.d) + '</span>' + (flagged ? '<span class="chip flag">⚑ للمراجعة لاحقًا</span>' : "") + (FAV.has(k) ? '<span class="chip">★ مفضلة</span>' : "") + "</div>";
-  h += '<div class="qt">' + esc(q.q) + "</div>" + qTable(q.t) + "</div>";
+  h += '<div class="qt" dir="auto">' + esc(q.q) + "</div>" + qTable(q.t) + "</div>";
   h += '<div class="hint">' + (showTruth ? "" : c.sim ? "اختر إجابتك، وتُحفظ تلقائيًا. تظهر النتيجة بعد تسليم الاختبار:" : "اختر الإجابة الصحيحة، وستظهر النتيجة فورًا:") + "</div>";
   h += '<div class="opts" role="radiogroup">';
   const chosen = sel !== null ? sel : (c.sim && !c.done ? a : null);
@@ -1184,7 +1234,7 @@ function render() {
       if (i === q.a) { cl = " ok"; mk = "✓"; tag = '<span class="tag">الإجابة الصحيحة</span>' }
       else if (i === a) { cl = " no"; mk = "×"; tag = '<span class="tag">إجابتك</span>' }
     } else if (i === chosen) { cl = " sel" }
-    h += '<button class="op' + cl + '" role="radio" aria-checked="' + (i === chosen) + '" data-i="' + i + '"' + (showTruth ? " disabled" : "") + '><span class="ck">' + mk + '</span><span class="tx">' + esc(o) + "</span>" + tag + (showTruth ? "" : '<span class="key">' + (p + 1) + "</span>") + "</button>";
+    h += '<button class="op' + cl + '" role="radio" aria-checked="' + (i === chosen) + '" data-i="' + i + '"' + (showTruth ? " disabled" : "") + '><span class="ck">' + mk + '</span><span class="tx" dir="auto">' + esc(o) + "</span>" + tag + (showTruth ? "" : '<span class="key">' + (p + 1) + "</span>") + "</button>";
   });
   h += "</div>";
   if (showTruth) {
@@ -1275,11 +1325,12 @@ function finishAsk() {
 /* ---------- simulation ---------- */
 $("mPrac").onclick = () => { if (S.mode === "prac") return; S.mode = "prac"; sel = null; view = "q"; persist(false); render(); if (S.sim && !S.sim.done) toast("تم إيقاف الاختبار مؤقتًا. يمكنك استكماله من «اختبر نفسك».") };
 $("mSim").onclick = () => {
-  if (S.sim && !S.sim.done) { S.mode = "sim"; sel = null; view = "q"; persist(false); render(); toast("استكمال الاختبار. المؤقت يعمل الآن."); return }
+  if (S.sim && !S.sim.done && (S.sim.tr || "edu") === TRACK) { S.mode = "sim"; sel = null; view = "q"; persist(false); render(); toast("استكمال الاختبار. المؤقت يعمل الآن."); return }
   simSetup();
 };
 function simSetup() {
-  const opts = '<option value="all">كل الأقسام (' + N + ")</option>" + SECTS.map(s => '<option value="' + esc(s) + '">' + esc(s) + " (" + Q.filter(q => q.s === s).length + ")</option>").join("");
+  const tS = trackSects().filter(s => Q.some(q => q.s === s)), tN = Q.filter(q => q.tr === TRACK).length;
+  const opts = '<option value="all">كل الأقسام (' + tN + ")</option>" + tS.map(s => '<option value="' + esc(s) + '">' + esc(s) + " (" + Q.filter(q => q.s === s).length + ")</option>").join("");
   modal('<h3>اختبر نفسك – اختبار جديد</h3><p class="note">يحاكي الاختبار الفعلي: تُختار الأسئلة عشوائيًا، وتُخفى الإجابات الصحيحة حتى التسليم، ثم يظهر تقرير بالنتيجة.</p>' +
     '<div class="fld"><label for="sSect">الأسئلة من</label><select id="sSect">' + opts + "</select></div>" +
     '<div class="fld"><label for="sCount">عدد الأسئلة</label><input id="sCount" type="number" min="5" max="' + N + '" value="60" inputmode="numeric"></div>' +
@@ -1291,12 +1342,13 @@ function simSetup() {
       b.querySelector("#sX").onclick = closeModal;
       b.querySelector("#sGo").onclick = () => {
         const sect = b.querySelector("#sSect").value;
-        const pool = []; for (let k = 0; k < N; k++) if (sect === "all" || Q[k].s === sect) pool.push(k);
+        const pool = []; for (let k = 0; k < N; k++) if (Q[k].tr === TRACK && (sect === "all" || Q[k].s === sect)) pool.push(k);
+        if (!pool.length) { toast("لا توجد أسئلة في هذا القسم بعد"); return }
         let n = Math.max(5, Math.min(pool.length, parseInt(b.querySelector("#sCount").value, 10) || 60));
         const mins = Math.max(0, Math.min(600, parseInt(b.querySelector("#sMin").value, 10) || 0));
         for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
         const qs = pool.slice(0, n);
-        S.sim = { qs, A: new Array(N).fill(null), flag: [], i: 0, dur: mins * 60, el: 0, done: false, sect, at: Date.now() };
+        S.sim = { qs, A: new Array(N).fill(null), flag: [], i: 0, dur: mins * 60, el: 0, done: false, sect, at: Date.now(), tr: TRACK };
         S.mode = "sim"; sel = null; filt = "all"; view = "q"; closeModal(); persist(true); render();
         toast("بدأ الاختبار: " + n + " سؤالًا" + (mins ? " في " + mins + " دقيقة" : ""));
       };
@@ -1364,6 +1416,7 @@ $("bStats").onclick = () => { view = view === "stats" ? "q" : "stats"; render() 
 function renderStats() {
   const A = S.p.A; let ok = 0, wr = 0, t = 0, tn = 0; const dom = {}, src = {}, wrongDom = {};
   for (let k = 0; k < N; k++) {
+    if (Q[k].tr !== TRACK) continue;   // analysis of the current track only
     const a = A[k]; if (S.p.t[k]) { t += S.p.t[k]; if (a !== null) tn++ }
     if (a === null) continue;
     const d = Q[k].d, s = Q[k].s; dom[d] = dom[d] || [0, 0]; src[s] = src[s] || [0, 0]; dom[d][1]++; src[s][1]++;
@@ -1843,16 +1896,42 @@ async function boot() {
   }
 }
 
+/* a track or standard with no questions yet: show the specialty's standards and how many questions each has */
+function renderEmpty() {
+  paint();
+  const count = s => Q.filter(q => q.s === s).length;
+  let h = '<div class="vh"><h2>' + (TRACK === "edu" ? "لا توجد أسئلة في هذا القسم" : "اختبار التخصص: " + esc(SPECS[TRACK].name)) + "</h2></div>";
+  if (TRACK !== "edu") {
+    const sp = SPECS[TRACK];
+    h += '<p class="note">معايير الرخصة المهنية لتخصص ' + esc(sp.name) + " (الرمز " + sp.code + " – " + esc(sp.stage) + "). " +
+      (S.p.sect === "all" ? "لم تُضف أسئلة لهذا التخصص بعد، وستظهر هنا مصنّفة حسب المعايير التالية فور إضافتها." : "لم تُضف أسئلة لهذا المعيار بعد.") + "</p>";
+    h += sp.domains.map(d => '<div class="spec-dom"><h3><span dir="ltr">' + esc(d[0]) + '</span><b>' + d[1] + "%</b></h3>" +
+      d[2].map(s => '<div class="spec-std' + (stdName(s) === S.p.sect ? " on" : "") + '"><code>' + s[0] + '</code><span dir="ltr">' + esc(s[1]) + '</span><small>' + count(stdName(s)) + " سؤال</small></div>").join("") + "</div>").join("");
+  }
+  $("mn").innerHTML = h;
+}
+// switch between «الاختبار التربوي» and a specialty; each track remembers its own chosen section
+window.enterTrack = id => {
+  if (id !== "edu" && !SPECS[id]) id = "edu";
+  S.p.sectT = S.p.sectT || {}; S.p.sectT[TRACK] = S.p.sect;
+  TRACK = id; try { sessionStorage.setItem("rm_track", id) } catch (e) {}
+  S.p.sect = S.p.sectT[id] || "all"; S.mode = "prac"; sel = null; filt = "all"; view = "q";
+  fillSects(); persist(false); render(); window.scrollTo(0, 0);
+};
+
 /* ---------- start ---------- */
 function fillSects() {
   // group the sections by where they come from, in the order they appear in the bank
   const REV = {}; Object.keys(REN).forEach(o => REV[REN[o]] = o);   // a renamed section stays in its original group
   const groupOf = s => (s = REV[s] || s, 0) || /^العواجي/.test(s) ? "نماذج العواجي" : /^أسئلة المعيار/.test(s) ? "أسئلة المعايير" : /^المعيار/.test(s) ? "بنك الأسئلة الشامل حسب المعايير" : /^أسئلتي/.test(s) ? "أسئلتي المستوردة" : "أقسام عامة";
-  const groups = []; SECTS.forEach(s => { const g = groupOf(s); let G = groups.find(x => x.g === g); if (!G) groups.push(G = { g, items: [] }); G.items.push(s) });
-  const count = s => Q.filter(q => q.s === s).length;
-  $("sect").innerHTML = '<option value="all">كل الأقسام (' + N + ")</option>" +
+  const count = s => Q.filter(q => q.s === s).length, tN = Q.filter(q => q.tr === TRACK).length;
+  let groups = [];
+  if (TRACK === "edu") trackSects().forEach(s => { const g = groupOf(s); let G = groups.find(x => x.g === g); if (!G) groups.push(G = { g, items: [] }); G.items.push(s) });
+  else groups = SPECS[TRACK].domains.map(d => ({ g: d[0] + " (" + d[1] + "%)", items: d[2].map(stdName) }));   // the standards in the official order
+  $("sect").innerHTML = '<option value="all">' + (TRACK === "edu" ? "كل الأقسام" : "كل معايير " + SPECS[TRACK].name) + " (" + tN + ")</option>" +
     groups.map(G => '<optgroup label="' + esc(G.g) + '">' + G.items.map(s => '<option value="' + esc(s) + '">' + esc(s) + " (" + count(s) + ")</option>").join("") + "</optgroup>").join("");
-  if (S.p.sect !== "all" && !SECTS.includes(S.p.sect)) S.p.sect = "all";
+  if (S.p.sect !== "all" && !trackSects().includes(S.p.sect)) S.p.sect = "all";
+  $("trackLbl").textContent = TRACK === "edu" ? "منصة تدريب واستعداد للرخصة المهنية" : "اختبار التخصص: " + SPECS[TRACK].name;
   $("sect").value = S.p.sect;
   syncSectReset();
 }
